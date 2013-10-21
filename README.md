@@ -8,7 +8,7 @@ avalon的三柱臣之一（ 路由，动画，AJAX）
 用法与jQuery的保持一致
 <table width="90%">
     <tr> 
-        <td>方法名</td>  <td>对IE6-9的兼并性情况</td>
+        <td>方法名</td>  <td>对IE6-9的兼容性情况</td>
     </tr>
     <tr> 
         <td>fx</td>  <td>支持</td>
