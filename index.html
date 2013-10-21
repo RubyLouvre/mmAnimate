@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html id="html">
+    <head>
+        <meta charset="utf-8">
+        <title>测试用例</title>
+        <style>
+            #aaa{
+                width:100px;
+                height:100px;
+                background: red;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="aaa"></div>
+        <script src="avalon.mobile.js"></script>
+        <script>
+         require("mmAnimate,ready!", function(avalon){
+            avalon(document.querySelector("#aaa")).fx({width:900},900,function(){
+                alert("动画结束")
+            })
+         })
+        </script>
+    </body>
+</html>
