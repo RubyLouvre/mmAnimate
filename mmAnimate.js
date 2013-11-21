@@ -241,8 +241,6 @@ define("mmAnimate", ["avalon"], function(avalon) {
         var fxFn = avalon.bind(node, animationend, function(event) {
             avalon.unbind(node, animationend, fxFn);
             var styles = window.getComputedStyle(node, null);
-
-
             // 保存最后的样式
             for (var i in props) {
                 if (props.hasOwnProperty(i)) {
@@ -254,15 +252,15 @@ define("mmAnimate", ["avalon"], function(avalon) {
             }
             node.classList.remove(className); //移除类名
             stopAnimation(className); //尝试移除keyframe
-            after(node);
-            complete(node);
+            after.call(node);
+            complete.call(node);
             var queue = node.fxQueue
             if (opts.queue && queue) { //如果在列状,那么开始下一个动画
                 queue.busy = 0;
                 nextAnimation(node, queue);
             }
         });
-        before(node);
+        before.call(node);
         node.classList.add(className);
     }
     function nextAnimation(node, queue) {
@@ -316,14 +314,14 @@ define("mmAnimate", ["avalon"], function(avalon) {
                 style.overflow = "hidden";
             }
             var after = opts.after || avalon.noop;
-            opts.after = function(node) {
-                node.style.display = "none";
+            opts.after = function() {
+                this.style.display = "none";
                 if (overflows) {
                     ["", "X", "Y"].forEach(function(postfix, index) {
                         style["overflow" + postfix] = overflows[index];
                     });
                 }
-                after(node);
+                after.call(this);
             };
         },
         toggle: function(node, hidden) {
