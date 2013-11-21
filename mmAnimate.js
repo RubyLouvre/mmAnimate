@@ -147,7 +147,8 @@ define("mmAnimate", ["avalon"], function(avalon) {
     var classRule = ".#{className}{ #{prefix}animation: #{frameName} #{duration} #{easing} " +
             "#{count} #{direction}; #{prefix}animation-fill-mode:#{mode}  }";
     //CSSKeyframesRule的模板
-    var frameRule = "@#{prefix}keyframes #{frameName}{ 0%{ #{from}; } 100%{  #{to}; }  }";
+    var frameRule = "@#{prefix}keyframes #{frameName}{ 0%{ #{from} } 100%{  #{to} }  }";
+    var rautoName = /width|height|top|left/, rautoValue = new RegExp("^$|auto");
     function startAnimation(node, id, props, opts) {
         var effectName = opts.effect;
         var className = "fx_" + effectName + "_" + id;
@@ -160,6 +161,9 @@ define("mmAnimate", ["avalon"], function(avalon) {
             if (ret === false) {
                 return;
             }
+        }
+        if (node.style.display == "none") {
+            node.style.display = ""
         }
         //各种回调
         var after = opts.after || avalon.noop;
@@ -182,6 +186,12 @@ define("mmAnimate", ["avalon"], function(avalon) {
                 if (val === "toggle") {
                     val = hidden ? "show" : "hide";
                 }
+                //http://stackoverflow.com/questions/6221411/any-perspectives-on-height-auto-for-css3-transitions-and-animations
+                //http://www.cnblogs.com/rubylouvre/archive/2009/09/04/1559557.html
+                if (rautoName.test(key) && rautoValue.test(node.style[key])) {
+                    node.style[key] = avalon(node).css(key)
+                }
+
                 if (val === "show") {
                     from.push(selector + ":0" + (avalon.cssNumber[key] ? "" : "px"));
                 } else if (val === "hide") { //hide
@@ -204,8 +214,7 @@ define("mmAnimate", ["avalon"], function(avalon) {
                 }
             });
             var easing = "cubic-bezier( " + easingMap[opts.easing] + " )";
-
-            var mode = effectName === "hide" ? "backwards" : "forwards";
+            var mode = effectName === "hide" || effectName == "slideUp" ? "backwards" : "forwards";
             //填空数据
             var rule1 = format(classRule, {
                 className: className,
@@ -217,12 +226,14 @@ define("mmAnimate", ["avalon"], function(avalon) {
                 count: opts.revert ? 2 : 1,
                 direction: opts.revert ? "alternate" : ""
             });
+
             var rule2 = format(frameRule, {
                 frameName: frameName,
                 prefix: prefixCSS,
                 from: from.join("; "),
                 to: to.join(";")
             });
+
             insertCSSRule(rule1);
             insertCSSRule(rule2);
         }
@@ -230,11 +241,16 @@ define("mmAnimate", ["avalon"], function(avalon) {
         var fxFn = avalon.bind(node, animationend, function(event) {
             avalon.unbind(node, animationend, fxFn);
             var styles = window.getComputedStyle(node, null);
+
+
             // 保存最后的样式
             for (var i in props) {
                 if (props.hasOwnProperty(i)) {
                     node.style[i] = styles[i];
                 }
+            }
+            if (effectName == "slideUp") {
+                node.style.display = "none"
             }
             node.classList.remove(className); //移除类名
             stopAnimation(className); //尝试移除keyframe
