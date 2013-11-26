@@ -13,13 +13,30 @@
     </head>
     <body>
         <div id="aaa"></div>
+        <button id="truetrue" type="button">stop(true, true)</button>
+        <button id="falsefalse" type="button">stop(false, false)</button>
+        <button id="truefalse" type="button">stop(true, false)</button>
+        <button id="falsetrue" type="button">stop(false, true)</button>
+
         <script src="avalon.mobile.js"></script>
         <script>
-         require("mmAnimate,ready!", function(avalon){
-            avalon(document.querySelector("#aaa")).fx({width:900},900,function(){
-                alert("动画结束")
+            require("mmAnimate,ready!", function(avalon) {
+                avalon(document.querySelector("#aaa")).fx({width: 900}, 2000, function() {
+                    alert("动画结束")
+                })
+                document.querySelector("#truetrue").onclick = function() {
+                    avalon(document.querySelector("#aaa")).stop(true, true)
+                }
+                document.querySelector("#truefalse").onclick = function() {
+                    avalon(document.querySelector("#aaa")).stop(true, false)
+                }
+                document.querySelector("#falsefalse").onclick = function() {
+                    avalon(document.querySelector("#aaa")).stop(false, false)
+                }
+                document.querySelector("#falsetrue").onclick = function() {
+                    avalon(document.querySelector("#aaa")).stop(false, true)
+                }
             })
-         })
         </script>
     </body>
 </html>
