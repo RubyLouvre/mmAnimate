@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />        
+        <title>avalon.fn.delay</title>
+        <script src="avalon.js"></script>
+        <script>
+            require("mmAnimate", function(avalon) {
+                var getRandomColor = function() {
+                    return  '#'+('00000'+(Math.random()*0x1000000<<0).toString(16)).slice(-6);
+                }
+                avalon.define("fx", function(vm) {
+                    vm.effect = function() {
+                        avalon(this).fx({background: getRandomColor()}, 1000)
+                    }
+
+                })
+                avalon.scan()
+            })
+        </script>
+        <style type="text/css">
+            #sample {
+                position: relative;height: 90px;
+            }
+            #sample  div { position: absolute; width: 60px; height: 60px; float: left; }
+            .first { background-color: #3f3; left: 0;}
+        </style>
+
+    </head>
+    <body>
+        <article>
+            <h3>颜色的动画</h3>
+            
+            <fieldset ><legend>例子</legend>
+                <pre class="brush:javascript;gutter:false;toolbar:false">
+       require("mmAnimate", function(avalon) {
+                var getRandomColor = function() {
+                    return  '#'+('00000'+(Math.random()*0x1000000<<0).toString(16)).slice(-6);
+                }
+                avalon.define("fx", function(vm) {
+                    vm.effect = function() {
+                        avalon(this).fx({background: getRandomColor()}, 1000)
+                    }
+
+                })
+                avalon.scan()
+            })
+                </pre>
+                <div id="sample" ms-controller="fx">
+                    <div class="first" ms-click="effect">点我</div>
+
+                </div>
+
+            </fieldset>
+
+        </article>
+    </body>
+</html>
