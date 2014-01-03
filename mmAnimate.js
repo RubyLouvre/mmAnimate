@@ -88,6 +88,7 @@ define(["avalon"], function(avalon) {
         for (var i = 1; i < arguments.length; i++) {
             addOption(opts, arguments[i])
         }
+
         opts.duration = typeof opts.duration === "number" ? opts.duration : 400
         opts.queue = !!(opts.queue == null || opts.queue) //默认进行排队
         opts.easing = avalon.easing[opts.easing] ? opts.easing : "swing"
@@ -117,6 +118,7 @@ define(["avalon"], function(avalon) {
                 p
         //第一个参数为元素的样式，我们需要将它们从CSS的连字符风格统统转为驼峰风格，
         //如果需要私有前缀，也在这里加上
+
         for (var name in props) {
             p = avalon.cssName(name) || name
             if (name !== p) {
@@ -137,7 +139,8 @@ define(["avalon"], function(avalon) {
     }
     effect.updateHooks = {
         _default: function(node, per, end, obj) {
-            avalon.css(node, obj.name, (end ? obj.to : obj.from + obj.easing(per) * (obj.to - obj.from)) + obj.unit)
+
+            avalon.css(node, obj.name, (end ? obj.to : obj.from + obj.easing(per) * (obj.to - obj.from)) + (obj.unit || 0))
         },
         color: function(node, per, end, obj) {
             var pos = obj.easing(per),
@@ -151,7 +154,7 @@ define(["avalon"], function(avalon) {
         }
     }
     function getInitVal(node, prop) {
-        if (isFinite(node[prop])) { //scrollTop/ scrollLeft
+        if (prop === "scrollTop" || prop === "scrollLeft") { //scrollTop/ scrollLeft
             return node[prop]
         }
         var result = avalon.css(node, prop)
@@ -198,7 +201,7 @@ define(["avalon"], function(avalon) {
             }
         },
         hide: function(node, frame) {
-            if (avalon.isHidden(node)) {
+            if (!avalon.isHidden(node)) {
                 var display = avalon.css(node, "display"),
                         s = node.style
                 if (display !== "none" && !node.__olddisplay__) {
@@ -248,22 +251,23 @@ define(["avalon"], function(avalon) {
                 var val = hash[name] //取得结束值
                 var type = getFxType(name) //取得类型
                 var from = getInitVal(node, name) //取得起始值
+             //   console.log(rfxnum.exec(from) + '  ' + name)
                 //处理 toggle, show, hide
                 if (val === "toggle") {
                     val = hidden ? "show" : "hide"
                 }
                 if (val === "show") {
-                    fx.method = val
-                    val = from
-                    from = 0
-                    avalon.css(node, name, 0)
+                    fx.method = val;
+                    val = from;
+                    from = 0;
+                    avalon.css(node, name, 0);
                 } else if (val === "hide") {
-                    fx.method = val
-                    orig[name] = from
-                    val = 0
+                    fx.method = val;
+                    orig[name] = from;
+                    val = 0;
                 }
-                //用于分解属性包中的样式或属性,变成可以计算的因子
                 if (type === "color") {
+                    //用于分解属性包中的样式或属性,变成可以计算的因子
                     parts = [color2array(from), color2array(val)]
                 } else {
                     from = parseFloat(from) //确保from为数字
@@ -283,11 +287,13 @@ define(["avalon"], function(avalon) {
                         }
                         parts = [from, to]
                     } else {
-                        parts = [0, 0]
+                        parts = [from, val]
+
                     }
                 }
                 from = parts[0]
                 to = parts[1]
+
                 if (from + "" === to + "") { //不处理初止值都一样的样式与属性
                     continue
                 }
@@ -299,12 +305,14 @@ define(["avalon"], function(avalon) {
                     easing: avalon.easing[easing],
                     unit: unit
                 }
+
                 props.push(prop)
                 revertProps.push(avalon.mix({}, prop, {
                     to: from,
                     from: to
                 }))
             }
+           // console.log(JSON.stringify(props))
             fx.props = props
             fx.revertProps = revertProps
             fx.orig = orig
@@ -337,6 +345,7 @@ define(["avalon"], function(avalon) {
             callback(fx, node, "before") //动画开始前做些预操作
             fx.props && parseFrames(fx.node, fx, index) //parse原始材料为关键帧
             fx.props = fx.props || []
+            console.log(fx)
             AnimationPreproccess[fx.method || "noop"](node, fx) //parse后也要做些预处理
             fx.startTime = now
         } else { //中间自动生成的补间
@@ -473,10 +482,11 @@ define(["avalon"], function(avalon) {
             var args = [].concat.apply([props], arguments)
             return this.fx.apply(this, args)
         }
-    });
+    })
 
-    "toggle, show,hide".replace(avalon.rword, function(name) {
+    "toggle,show,hide".replace(avalon.rword, function(name) {
         var pre = avalon.fn[name]
+
         avalon.fn[name] = function(a) {
             if (!arguments.length || typeof a === "boolean") {
                 return pre && pre.apply(this, arguments)
@@ -500,8 +510,7 @@ define(["avalon"], function(avalon) {
     }
     if (window.VBArray) {
         var parseColor = new function() {
-            var trim = /^\s+|\s+$/g;
-            var bod;
+            var trim = /^\s+|\s+$/g, bod
             try {
                 var docum = new ActiveXObject("htmlfile")
                 docum.write("<body>")

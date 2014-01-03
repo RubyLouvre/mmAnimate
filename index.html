@@ -2,41 +2,32 @@
 <html id="html">
     <head>
         <meta charset="utf-8">
-        <title>测试用例</title>
+        <title>动画组件</title>
         <style>
-            #aaa{
-                width:100px;
-                height:100px;
-                background: red;
+            .json{
+                width:200px;
+                height:200px;
+                background:red;
             }
         </style>
-    </head>
-    <body>
-        <div id="aaa"></div>
-        <button id="truetrue" type="button">stop(true, true)</button>
-        <button id="falsefalse" type="button">stop(false, false)</button>
-        <button id="truefalse" type="button">stop(true, false)</button>
-        <button id="falsetrue" type="button">stop(false, true)</button>
-
-        <script src="avalon.mobile.js"></script>
+        <script src="avalon.js"></script>
         <script>
-            require("mmAnimate,ready!", function(avalon) {
-                avalon(document.querySelector("#aaa")).fx({width: 900}, 2000, function() {
-                    alert("动画结束")
+            require("mmAnimate", function(avalon) {
+                avalon.define("fx", function(vm) {
+                    vm.effect = function() {
+                      //  alert( avalon.css(this, "width"))
+                      //  alert( avalon.css(this, "height"))
+                        avalon(this).hide(1000).delay(2000).show(2000)
+                    }
                 })
-                document.querySelector("#truetrue").onclick = function() {
-                    avalon(document.querySelector("#aaa")).stop(true, true)
-                }
-                document.querySelector("#truefalse").onclick = function() {
-                    avalon(document.querySelector("#aaa")).stop(true, false)
-                }
-                document.querySelector("#falsefalse").onclick = function() {
-                    avalon(document.querySelector("#aaa")).stop(false, false)
-                }
-                document.querySelector("#falsetrue").onclick = function() {
-                    avalon(document.querySelector("#aaa")).stop(false, true)
-                }
+                avalon.scan()
             })
         </script>
+    </head>
+    <body>
+        <p>依赖于mmAnimate</p>
+        <pre class="json" ms-controller="fx" ms-click="effect">
+
+        </pre>
     </body>
 </html>
