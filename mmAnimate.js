@@ -4,7 +4,7 @@ define(["avalon"], function(avalon) {
         scroll: /scroll/i
     }
 
-    var rfxnum = /^([+\-/*]=)?([\d+.\-]+)([a-z%]*)/i
+    var rfxnum = new RegExp( "^(?:([+-])=|)(" +  (/[+-]?(?:\d*\.|)\d+(?:[eE][+-]?\d+|)/).source+ ")([a-z%]*)$", "i" )
     var root = document.documentElement
     avalon.mix({
         easing: {//缓动公式
@@ -272,14 +272,21 @@ define(["avalon"], function(avalon) {
                         val = 0;
                     } else {// "18em"  "+=18em"
                         parts = rfxnum.exec(val)//["+=18em", "+=", "18", "em"]
+                        console.log(parts)
                         if (parts) {
                             parts[2] = parseFloat(parts[2]) //18
-                            if (parts && parts[ 3 ] !== unit) {//如果存在单位，并且与之前的不一样，需要转换
-                                avalon.css(node, name, parts[2]  + (parts[3] ? parts[3]: 0))
-                                parts[ 2 ] = parseFloat(avalon.css(node, name))
+                            if (parts[3] && parts[ 3 ] !== unit) {//如果存在单位，并且与之前的不一样，需要转换
+                                var clone = node.cloneNode(true)
+                                clone.style.visibility = "none"
+                                node.parentNode.appendChild(clone)
+                                avalon.css(clone, name, parts[2] + (parts[3] ? parts[3] : 0))
+                                parts[ 2 ] = parseFloat(avalon.css(clone, name))
+                                node.parentNode.removeChild(clone)
                             }
-                            if(parts[ 1 ]){
-                                to = from +  ( parts[ 1 ] + 1 ) * parts[ 2 ]
+                            to = parts[2]
+                            from = parseFloat(from)
+                            if (parts[ 1 ]) {
+                                to = from + (parts[ 1 ] + 1) * parts[ 2 ]
                             }
                             parts = [from, to]
                         } else {

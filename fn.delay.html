@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />        
+        <title>avalon.fn.delay</title>
+        <script src="avalon.js"></script>
+        <script>
+            require("mmAnimate", function(avalon) {
+                avalon.define("fx", function(vm) {
+                    vm.effect1 = function() {
+                        avalon(this).slideUp(300).fx(2000).fadeIn(400).hide(1000).show(1000);
+                    }
+                    vm.effect2 = function() {
+                        avalon(this).slideUp(300).fadeIn(400).hide(1000).show(1000);
+                    }
+                })
+                avalon.scan()
+            })
+        </script>
+        <style type="text/css">
+            #sample {
+                position: relative;height: 90px;
+            }
+            #sample  div { position: absolute; width: 60px; height: 60px; float: left; }
+            .first { background-color: #3f3; left: 0;}
+            .second { background-color: #33f; left: 80px;}
+        </style>
+
+    </head>
+    <body>
+        <article>
+            <h3>avalon.fn.delay(duration)</h3>
+            <p><span class="stress">描述：</span></p>
+            <p>delay会将其列队中没有执行的动画都向后延迟duration秒执行。</p>
+            <p><span class="stress">参数：</span></p>
+            <dl>
+                <dt>duration</dt>
+                <dd>必需。Number。动画执行时间，单位为ms。</dd>
+            </dl>
+            <p><span class="stress">返回值：</span></p>
+            <p>avalon实例</p>
+            <p>其实此方法相当于avalon.fn.fx(duration), 但fx方法会做许多其他操作, 而它不会。</p>
+            <fieldset ><legend>例子</legend>
+                <pre class="brush:javascript;gutter:false;toolbar:false">
+           require("mmAnimate", function(avalon) {
+                avalon.define("fx", function(vm) {
+                    vm.effect1 = function() {
+                        avalon(this).slideUp(300).fx(2000).fadeIn(400).hide(1000).show(1000);
+                    }
+                      vm.effect2 = function() {
+                        avalon(this).slideUp(300).fadeIn(400).hide(1000).show(1000);
+                    }
+                })
+                avalon.scan()
+            })
+                </pre>
+                <div id="sample" ms-controller="fx">
+                    <div class="first" ms-click="effect1"></div>
+                    <div class="second" ms-click="effect2"></div>
+                </div>
+
+            </fieldset>
+
+        </article>
+    </body>
+</html>

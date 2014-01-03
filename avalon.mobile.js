@@ -1162,12 +1162,15 @@
                 var el = fn.element
                 if (el && !ifSanctuary.contains(el) && (!root.contains(el))) {
                     list.splice(i, 1)
+                    for (var j in fn) {
+                        fn[j] = null
+                    }
                 } else if (typeof fn === "function") {
                     fn.apply(0, args) //强制重新计算自身
                 } else if (fn.getter) {
                     fn.handler.apply(fn, args) //强制重新计算自身
                 } else {
-                    fn.handler(fn.evaluator.apply(0, fn.args), el, fn)
+                    fn.handler(fn.evaluator.apply(0, fn.args || []), el, fn)
                 }
             }
         }
@@ -1271,7 +1274,7 @@
     var rmsAttr = /ms-(\w+)-?(.*)/
 
     function scanAttr(elem, vmodels, repeatBinding, ifBinding) {
-        var bindings = [],
+        var bindings = [], hasWidget,
                 match
         for (var i = 0, attr; attr = elem.attributes[i++]; ) {
             if (match = attr.name.match(rmsAttr)) {
@@ -1285,6 +1288,9 @@
                         name: match[0],
                         value: attr.nodeValue
                     }
+                    if (type === "widget") {
+                        hasWidget = true
+                    } 
                     if (type === "repeat") {
                         repeatBinding = binding
                     } else if (type === "if") {
@@ -1315,25 +1321,28 @@
                 })
             }
 
-            var isWidget = executeBindings(bindings, vmodels)
-            if ((!isWidget) && !stopScan[elem.tagName] && rbind.test(elem.innerHTML)) {
+            if (vmodels.length || hasWidget) {
+                executeBindings(bindings, vmodels)
+            }
+            if ((!hasWidget) && !stopScan[elem.tagName] && rbind.test(elem.innerHTML)) {
                 scanNodes(elem, vmodels) //扫描子孙元素
             }
         }
     }
 
     function executeBindings(bindings, vmodels) {
-        var stopScan
+        var skip = vmodels.length
         for (var i = 0, data; data = bindings[i++]; ) {
-            data.vmodels = vmodels
-            stopScan ^= bindingHandlers[data.type](data, vmodels)
-            if (data.evaluator) { //移除数据绑定，防止被二次解析
-                //chrome使用removeAttributeNode移除不存在的特性节点时会报错 https://github.com/RubyLouvre/avalon/issues/99
-                data.element.removeAttribute(data.name)
+            if (skip || data.type == "widget") {
+                data.vmodels = vmodels
+                bindingHandlers[data.type](data, vmodels)
+                if (data.evaluator) { //移除数据绑定，防止被二次解析
+                    //chrome使用removeAttributeNode移除不存在的特性节点时会报错 https://github.com/RubyLouvre/avalon/issues/99
+                    data.element.removeAttribute(data.name)
+                }
             }
         }
         bindings.length = 0
-        return stopScan
     }
 
 
@@ -1468,7 +1477,7 @@
         }
         return cache;
     }
-    var cacheExpr = createCache(512)
+    var cacheExpr = createCache(256)
     //根据一段文本与一堆VM，转换为对应的求值函数及匹配的VM(解释器模式)
 
     function parseExpr(code, scopes, data, four) {
@@ -2610,6 +2619,7 @@
                 }
             }
         }
+        parent.textContent = ""
     }
 
     function iteratorCallback(data, method) {

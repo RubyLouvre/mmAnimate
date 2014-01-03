@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />        
+        <title>avalon.fn.stop</title>
+        <style type="text/css">
+            .test{
+                background: red;
+                width:10px;
+                height:10px;
+                margin: 5px;
+            }
+        </style>
+        <script src="avalon.js"></script>
+        <script>
+            require("ready!,mmAnimate", function(avalon) {
+                var box = avalon(document.getElementById("test"));
+                avalon.define("fx", function(vm) {
+                    vm.start = function() {
+                     
+                        box.fx({width: "+=100"}, 2000).fx({height: "+=100"}, 2000)
+                    }
+                    vm.reset = function() {
+                        box.width(10).height(10)
+                    }
+                    vm.stop = function(a, b) {
+                        box.stop(a, b);
+                    }
+
+                    vm.pause = function(a, b) {
+                        box.pause()
+                    }
+                    vm.resume = function(a, b) {
+                        box.resume()
+                    }
+                })
+                avalon.scan()
+            })
+        </script>
+
+
+    </head>
+    <body>
+        <article>
+            <h3>avalon.fn.stop([clearQueue],[jumpToEnd])</h3>
+            <p><span class="stress">描述：</span></p>
+            <p>avalon支持四种形式的中止动画的方式，通过这两个参数的有机组合。</p>
+            <p><span class="stress">参数：</span></p>
+            <dl>
+                <dt>obj</dt>
+                <dd>可选。Boolean。默认为false。是否清空列队。</dd>
+                <dt>name</dt>
+                <dd>可选。Boolean。默认为false。是否跳到此动画最后一帧</dd>
+            </dl>
+            <p><span class="stress">返回值：</span></p>
+            <p>avalon实例</p>
+            <fieldset ms-controller="fx"><legend>例子</legend>
+                <p>当点击开始按钮,然后立即点击其他任一停止按钮!</p>
+                <p><button id="start" type="button" ms-click="start">开始</button>
+                    <button id="stop0" type="button" ms-click="stop(false,false)">停止false,false</button>
+                    <button id="stop1" type="button" ms-click="stop(false,true)">停止false,true</button>
+                    <button id="stop2" type="button" ms-click="stop(true,false)">停止true,false</button>
+                    <button id="stop3" type="button" ms-click="stop(true,true)">停止true,true</button>
+                    <button id="pause" type="button" ms-click="pause">暂停</button>
+                    <button id="resume" type="button" ms-click="resume">继续</button>
+                    <button id="reset" type="button" ms-click="reset">重置</button></p>
+                <div class="container">
+                    <div class="test" id="test">
+                        TEXT
+                    </div>
+                </div>
+                <p>由上面的演示我们可以看到以下效果： </p>
+                <ul>
+                    <li>false,false:跳过了宽的渐变动画，直接执行高的渐变动画。</li>
+                    <li>false,true:立即把宽设为最终值，然后执行高的渐变动画。</li>
+                    <li>true,false:停止了宽与高的动画。</li>
+                    <li>true,true:停止了宽与高的动画，并把它们的值设到最终值。</li>
+                </ul>
+                <pre class="brush:javascript;gutter:false;toolbar:false">
+            require("mmAnimate", function(avalon) {
+                var box = avalon(document.getElementById("test"));
+                avalon.define("fx", function(vm) {
+                    vm.start = function() {
+                        box.fx({width: "+=100"}, 2000).fx({height: "+=100"}, 2000)
+                    }
+                    vm.reset = function() {
+                        box.width(10).height(10)
+                    }
+                    vm.stop = function(a, b) {
+                        box.stop(a, b);
+                    }
+
+                    vm.pause = function(a, b) {
+                        box.pause()
+                    }
+                    vm.resume = function(a, b) {
+                        box.resume()
+                    }
+                })
+                avalon.scan()
+            })
+                </pre>
+            </fieldset>
+        </article>
+    </body>
+</html>
