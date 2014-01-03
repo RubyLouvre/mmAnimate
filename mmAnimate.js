@@ -4,7 +4,8 @@ define(["avalon"], function(avalon) {
         scroll: /scroll/i
     }
 
-    var rfxnum = /^([+\-/*]=)?([\d+.\-]+)([a-z%]*)avalon/i
+    var rfxnum = /^([+\-/*]=)?([\d+.\-]+)([a-z%]*)/i
+    var root = document.documentElement
     avalon.mix({
         easing: {//缓动公式
             linear: function(pos) {
@@ -16,10 +17,9 @@ define(["avalon"], function(avalon) {
         },
         fps: 30,
         isHidden: function(node) {
-            return  node.sourceIndex === 0 || avalon.css(node, "display") === "none" || !avalon.contains(node.ownerDocument, node)
+            return  node.sourceIndex === 0 || avalon.css(node, "display") === "none" || !avalon.contains(root, node)
         }
     })
-
 
     //==============================中央列队=======================================
     var timeline = avalon.timeline = [] //时间轴
@@ -237,7 +237,7 @@ define(["avalon"], function(avalon) {
     }
     function parseFrames(node, fx, index) {
         //用于生成动画实例的关键帧（第一帧与最后一帧）所需要的计算数值与单位，并将回放用的动画放到negative子列队中去
-        var to, parts, unit, op, props = [],
+        var to, parts, unit, props = [],
                 revertProps = [],
                 orig = {},
                 hidden = avalon.isHidden(node),
@@ -249,47 +249,44 @@ define(["avalon"], function(avalon) {
                     continue
                 }
                 var val = hash[name] //取得结束值
-                var type = getFxType(name) //取得类型
+                var type = getFxType(name) //取得updateHooks类型
                 var from = getInitVal(node, name) //取得起始值
-             //   console.log(rfxnum.exec(from) + '  ' + name)
-                //处理 toggle, show, hide
-                if (val === "toggle") {
-                    val = hidden ? "show" : "hide"
-                }
-                if (val === "show") {
-                    fx.method = val;
-                    val = from;
-                    from = 0;
-                    avalon.css(node, name, 0);
-                } else if (val === "hide") {
-                    fx.method = val;
-                    orig[name] = from;
-                    val = 0;
-                }
                 if (type === "color") {
                     //用于分解属性包中的样式或属性,变成可以计算的因子
                     parts = [color2array(from), color2array(val)]
                 } else {
-                    from = parseFloat(from) //确保from为数字
-                    if ((parts = rfxnum.exec(val))) {
-                        to = parseFloat(parts[2]), //确保to为数字
-                                unit = avalon.cssNumber[name] ? 0 : (parts[3] || "px")
-                        if (parts[1]) {
-                            op = parts[1].charAt(0)  //操作符
-                            if (unit && unit !== "px" && (op === "+" || op === "-")) {
-                                avalon.css(node, name, (to || 1) + unit)
-                                from = ((to || 1) / parseFloat(avalon.css(node, name))) * from
-                                avalon.css(node, name, from + unit)
-                            }
-                            if (op) { //处理+=,-= \= *=
-                                to = eval(from + op + to)
-                            }
-                        }
-                        parts = [from, to]
-                    } else {
-                        parts = [from, val]
-
+                    parts = rfxnum.exec(from)
+                    var unit = parts && parts[ 3 ] || (avalon.cssNumber[ name ] ? "" : "px")
+                    //处理 toggle, show, hide
+                    if (val === "toggle") {
+                        val = hidden ? "show" : "hide"
                     }
+                    if (val === "show") {
+                        fx.method = val;
+                        avalon.css(node, name, 0);
+                        parts = [0, parseFloat(from)]
+                    } else if (val === "hide") {
+                        fx.method = val;
+                        orig[name] = from
+                        parts = [parseFloat(from), 0]
+                        val = 0;
+                    } else {// "18em"  "+=18em"
+                        parts = rfxnum.exec(val)//["+=18em", "+=", "18", "em"]
+                        if (parts) {
+                            parts[2] = parseFloat(parts[2]) //18
+                            if (parts && parts[ 3 ] !== unit) {//如果存在单位，并且与之前的不一样，需要转换
+                                avalon.css(node, name, parts[2]  + (parts[3] ? parts[3]: 0))
+                                parts[ 2 ] = parseFloat(avalon.css(node, name))
+                            }
+                            if(parts[ 1 ]){
+                                to = from +  ( parts[ 1 ] + 1 ) * parts[ 2 ]
+                            }
+                            parts = [from, to]
+                        } else {
+                            continue
+                        }
+                    }
+
                 }
                 from = parts[0]
                 to = parts[1]
@@ -312,7 +309,6 @@ define(["avalon"], function(avalon) {
                     from: to
                 }))
             }
-           // console.log(JSON.stringify(props))
             fx.props = props
             fx.revertProps = revertProps
             fx.orig = orig
@@ -345,7 +341,6 @@ define(["avalon"], function(avalon) {
             callback(fx, node, "before") //动画开始前做些预操作
             fx.props && parseFrames(fx.node, fx, index) //parse原始材料为关键帧
             fx.props = fx.props || []
-            console.log(fx)
             AnimationPreproccess[fx.method || "noop"](node, fx) //parse后也要做些预处理
             fx.startTime = now
         } else { //中间自动生成的补间
