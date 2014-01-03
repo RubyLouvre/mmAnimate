@@ -16,14 +16,10 @@ define(["avalon"], function(avalon) {
         },
         fps: 30,
         isHidden: function(node) {
-            return  avalon.css(node, "display") === "none" || !avalon.contains(node.ownerDocument, node)
+            return  node.sourceIndex === 0 || avalon.css(node, "display") === "none" || !avalon.contains(node.ownerDocument, node)
         }
     })
-    if (typeof document.documentElement.sourceIndex == "number") {
-        avalon.isHidden = function(node) {
-            return node.sourceIndex === 0
-        }
-    }
+
 
     //==============================中央列队=======================================
     var timeline = avalon.timeline = [] //时间轴
