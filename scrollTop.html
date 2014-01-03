@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />        
+        <title>滚动条动画</title>
+        <script src="avalon.js"></script>
+        <script>
+            require("mmAnimate", function(avalon) {
+                avalon.define("fx", function(vm) {
+                    vm.array = avalon.range(0, 1000)
+                    vm.effect = function() {
+                        avalon(this).fx({scrollTop: "+=150"}, 1000)
+                    }
+                })
+                avalon.scan()
+            })
+        </script>
+        <style type="text/css">
+            .effect {
+                width:200px;
+                height: 200px;
+                background: green;
+                overflow:auto;
+                border:1px solid #000;
+            }
+
+        </style>
+    </head>
+    <body>
+        <h3>滚动条动画</h3>
+        <div ms-controller="fx" ms-each="array" ms-click="effect" class="effect">
+            <div>{{el}}</div>
+        </div>
+        <pre>
+            require("mmAnimate", function(avalon) {
+                avalon.define("fx", function(vm) {
+                    vm.array = avalon.range(0, 1000)
+                    vm.effect = function() {
+                        avalon(this).fx({scrollTop: "+=150"}, 1000)
+                    }
+                })
+                avalon.scan()
+            })
+        </pre>
+    </body>
+</html>
