@@ -44,6 +44,7 @@ define(["mmPromise"], function(avalon) {
         this.queue = !!(this.queue == null || this.queue) //默认进行排队
         this.easing = avalon.easing[this.easing] ? this.easing : "swing"
         this.update = true
+        this.gotoEnd = false
     }
 
     function addOption(frame, p, name) {
@@ -113,8 +114,7 @@ define(["mmPromise"], function(avalon) {
     function enterFrame(frame, index) {
         //驱动主列队的动画实例进行补间动画(update)，
         //并在动画结束后，从子列队选取下一个动画实例取替自身
-        var node = frame.elem,
-                now = +new Date
+        var now = +new Date
         if (!frame.startTime) { //第一帧
             frame.fire("before")//动画开始前做些预操作
             frame.createTweens()
@@ -123,11 +123,11 @@ define(["mmPromise"], function(avalon) {
         } else { //中间自动生成的补间
             var per = (now - frame.startTime) / frame.duration
             var end = frame.gotoEnd || per >= 1 //gotoEnd可以被外面的stop方法操控,强制中止
-            var hooks = effect.updateHooks
             if (frame.update) {
-                for (var i = 0, obj; obj = frame.props[i++]; ) { // 处理渐变
-                    (hooks[obj.type] || hooks._default)(node, per, end, obj)
+                for (var i = 0, tween; tween = frame.tweens[i++]; ) {
+                    tween.run(per, end)
                 }
+                frame.fire("step") //每执行一帧调用的回调
             }
             if (end) { //最后一帧
                 frame.fire("after") //动画结束后执行的一些收尾工作
@@ -143,8 +143,6 @@ define(["mmPromise"], function(avalon) {
                 timeline[index] = neo
                 neo.positive = frame.positive
                 neo.negative = frame.negative
-            } else {
-                frame.fire("step") //每执行一帧调用的回调
             }
         }
         return true
@@ -242,7 +240,7 @@ define(["mmPromise"], function(avalon) {
 
     function createTweenImpl(frame, name, value, hidden) {
         var elem = frame.elem
-        var tween = new Tween(frame, name, value)
+        var tween = new Tween(name, frame)
         var from = tween.cur() //取得起始值
         var to
         if (/color$/.test(name)) {
@@ -297,20 +295,44 @@ define(["mmPromise"], function(avalon) {
     }
 
     //缓动对象
-    function Tween(options, prop, end) {
-        this.options = options
+    function Tween(prop, options) {
         this.elem = options.elem
         this.prop = prop
-        this.end = end
         this.easing = avalon.easing[this.options.easing]
+        if (/color$/i.test(prop)) {
+            this.update = this.updateColor
+        }
     }
 
     Tween.prototype = {
         cur: function() {
-            var hooks = Tween.propHooks[ this.prop ];
+            var hooks = Tween.propHooks[ this.prop ]
             return hooks && hooks.get ?
                     hooks.get(this) :
                     Tween.propHooks._default.get(this)
+        },
+        run: function(per, end) {
+            this.update(per, end)
+            var hook = Tween.propHooks[ this.prop ]
+            if (hook && hook.set) {
+                hook.set(this);
+            } else {
+                Tween.propHooks._default.set(this)
+            }
+        },
+        updateColor: function(per, end) {
+            if (end) {
+                var rgb = this.end
+            } else {
+                var pos = this.easing(per)
+                rgb = this.start.map(function(from, i) {
+                    return Math.max(Math.min(parseInt(from + (this.end[i] - from) * pos, 10), 255), 0)
+                }, this)
+            }
+            this.now = "rgb(" + rgb + ")"
+        },
+        update: function(per, end) {
+            this.now = (end ? this.end : this.start + this.easing(per) * (this.end - this.start))
         }
     }
 
@@ -321,7 +343,7 @@ define(["mmPromise"], function(avalon) {
                 return !result || result === "auto" ? 0 : result
             },
             set: function(tween) {
-                avalon.css(tween.elem, tween.prop, tween.now)
+                avalon.css(tween.elem, tween.prop, tween.now + tween.unit)
             }
         }
     }
@@ -329,10 +351,10 @@ define(["mmPromise"], function(avalon) {
     avalon.each(["scrollTop", "scollLeft"], function(name) {
         Tween.propHooks[name] = {
             get: function(tween) {
-                return tween.elem[name]
+                return tween.elem[tween.name]
             },
             set: function(tween) {
-                tween.elem[name] = tween.now
+                tween.elem[tween.name] = tween.now
             }
         }
     })
@@ -349,7 +371,7 @@ define(["mmPromise"], function(avalon) {
     }
     if (window.VBArray) {
         var parseColor = new function() {
-            var  body
+            var body
             try {
                 var doc = new ActiveXObject("htmlfile")
                 doc.write("<body>")
