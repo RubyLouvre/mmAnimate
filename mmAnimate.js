@@ -272,7 +272,7 @@ define(["avalon"], function(avalon) {
                         val = 0;
                     } else {// "18em"  "+=18em"
                         parts = rfxnum.exec(val)//["+=18em", "+=", "18", "em"]
-                        console.log(parts)
+                      //  console.log(parts)
                         if (parts) {
                             parts[2] = parseFloat(parts[2]) //18
                             if (parts[3] && parts[ 3 ] !== unit) {//如果存在单位，并且与之前的不一样，需要转换
