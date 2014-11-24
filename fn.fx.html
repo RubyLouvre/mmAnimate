@@ -12,7 +12,7 @@
         </style>
         <script src="avalon.js"></script>
         <script>
-            require("mmAnimate", function(avalon) {
+            require(["mmAnimate2","ready!"], function() {
                 avalon.define("fx", function(vm) {
                     vm.effect = function() {
                         avalon(this).animate({

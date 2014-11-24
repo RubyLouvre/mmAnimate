@@ -1,6 +1,6 @@
 define(["avalon"], function(avalon) {
     var types = {
-        color: /backgroundavalon|color/i,
+        color: /backgroundColor|color/i,
         scroll: /scroll/i
     }
 
