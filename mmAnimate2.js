@@ -132,17 +132,19 @@ define(["mmPromise"], function(avalon) {
             if (end) { //最后一帧
                 frame.fire("after") //动画结束后执行的一些收尾工作
                 frame.fire("complete") //执行用户回调
-                if (frame.revert && frame.negative.length) { //如果设置了倒带
-                    Array.prototype.unshift.apply(frame.positive, frame.negative.reverse())
-                    frame.negative = [] // 清空负向列队
+                if (frame.revert) { //如果设置了倒带
+                    this.revertTweens()
+                    delete this.startTime
+                    this.gotoEnd = false
+
+                } else {
+                    var neo = frame.troops.shift()
+                    if (!neo) {
+                        return false
+                    } //如果存在排队的动画,让它继续
+                    neo.troops = frame.troops
+                    insertFrame(frame)
                 }
-                var neo = frame.positive.shift()
-                if (!neo) {
-                    return false
-                } //如果存在排队的动画,让它继续
-                timeline[index] = neo
-                neo.positive = frame.positive
-                neo.negative = frame.negative
             }
         }
         return true
@@ -194,16 +196,16 @@ define(["mmPromise"], function(avalon) {
                     display = avalon.parseDisplay(elem.nodeName)
                     elem.setAttribute("olddisplay", display)
                 }
-                elem.style.display = display
+                style.display = display
 
                 //修正内联元素的display为inline-block，以让其可以进行width/height的动画渐变
                 if (display === "inline" && avalon.css(elem, "float") === "none") {
                     if (inlineBlockNeedsLayout) { //IE
                         if (display === "inline") {
-                            elem.style.display = "inline-block"
+                            style.display = "inline-block"
                         } else {
-                            elem.style.display = "inline"
-                            elem.style.zoom = 1
+                            style.display = "inline"
+                            style.zoom = 1
                         }
                     }
                 } else { //W3C
@@ -228,11 +230,20 @@ define(["mmPromise"], function(avalon) {
                 })
             }
         },
-        createTween: function() {
+        createTweens: function() {
             var hidden = Frame.isHidden(this.elem)
             for (var i in this.props) {
                 createTweenImpl(this, i, this.props[i], hidden)
             }
+        },
+        revertTweens: function() {
+            for (var i = 0, tween; tween = this.tweens[i++]; ) {
+                var start = this.start
+                var end = this.end
+                this.start = end
+                this.end = start
+            }
+            this.revert = !this.revert
         }
     }
 
@@ -358,6 +369,73 @@ define(["mmPromise"], function(avalon) {
             }
         }
     })
+
+
+    avalon.fn.mix({
+        delay: function(ms) {
+            return this.animate(ms)
+        },
+        pause: function() {
+            var cur = this[0]
+            for (var i = 0, frame; frame = timeline[i]; i++) {
+                if (frame.elme === cur) {
+                    frame.paused = new Date - 0
+                }
+            }
+            return this
+        },
+        resume: function() {
+            var now = new Date
+            var node = this[0]
+            for (var i = 0, fx; fx = timeline[i]; i++) {
+                if (fx.node === node) {
+                    fx.startTime += (now - fx.paused)
+                    delete fx.paused
+                }
+            }
+            return this
+        },
+        //如果clearQueue为true，是否清空列队
+        //如果gotoEnd 为true，是否跳到此动画最后一帧
+        stop: function(clearQueue, gotoEnd) {
+            clearQueue = clearQueue ? "1" : ""
+            gotoEnd = gotoEnd ? "1" : "0"
+            var stopCode = parseInt(clearQueue + gotoEnd, 2) //返回0 1 2 3
+            var node = this[0]
+            for (var i = 0, frame; frame = timeline[i]; i++) {
+                if (frame.elem === node) {
+                    frame.gotoEnd = true
+                    switch (stopCode) { //如果此时调用了stop方法
+                        case 0:
+                            //中断当前动画，继续下一个动画
+                            frame.update = frame.revert = false
+                            break
+                        case 1:
+                            //立即跳到最后一帧，继续下一个动画
+                            frame.revert = false
+                            break
+                        case 2:
+                            //清空该元素的所有动画
+                            delete frame.elem
+                            break
+                        case 3:
+                            //立即完成该元素的所有动画
+                            frame.troops.forEach(function(a) {
+                                a.gotoEnd = true
+                            })
+                            break
+                    }
+                }
+            }
+            return this
+        }
+    })
+
+    var fxAttrs = [
+        ["height", "marginTop", "marginBottom", "borderTopWidth", "borderBottomWidth", "paddingTop", "paddingBottom"],
+        ["width", "marginLeft", "marginRight", "borderLeftWidth", "borderRightWidth", "paddingLeft", "paddingRight"],
+        ["opacity"]
+    ]
     //=======================转换各种颜色值为RGB数组===========================
     var colorMap = {
         "black": [0, 0, 0],
