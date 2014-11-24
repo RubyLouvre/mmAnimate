@@ -1,15 +1,13 @@
 
 define(["mmPromise"], function(avalon) {
-    var types = {
-        color: /backgroundColor|color/i,
-        scroll: /scroll/i
-    }
+
 
     function Frame(node) {
         this.$events = {}
         this.node = node
         this.troops = []
         this.tweens = []
+        this.orig = []
     }
     Frame.prototype = {
         constructor: Frame,
@@ -24,12 +22,117 @@ define(["mmPromise"], function(avalon) {
             for (var i = 0, fn; fn = fns[i++]; ) {
                 fn.call(this.node, args)
             }
+        },
+        createTween: function() {
+            var hidden = avalon.fx.isHidden(this.elem)
+            for (var i in this.props) {
+                createTweenImpl(this, i, this.props[i], hidden)
+            }
+        }
+    }
+    var rfxnum = new RegExp("^(?:([+-])=|)(" + (/[+-]?(?:\d*\.|)\d+(?:[eE][+-]?\d+|)/).source + ")([a-z%]*)$", "i")
+    function createTweenImpl(frame, name, value, hidden) {
+        var node = frame.node
+        var tween = new Tween(frame, name, value)
+        var from = tween.cur() //取得起始值
+        var to
+        if (/color$/.test(name)) {
+            //用于分解属性包中的样式或属性,变成可以计算的因子
+            parts = [color2array(from), color2array(value)]
+        } else {
+            parts = rfxnum.exec(from)
+            var unit = parts && parts[ 3 ] || (avalon.cssNumber[ name ] ? "" : "px")
+            //处理 toggle, show, hide
+            if (value === "toggle") {
+                value = hidden ? "show" : "hide"
+            }
+            if (value === "show") {
+                frame.method = value;
+                avalon.css(node, name, 0);
+                parts = [0, parseFloat(from)]
+            } else if (value === "hide") {
+                frame.method = value;
+                frame.orig[name] = from
+                parts = [parseFloat(from), 0]
+                value = 0;
+            } else {// "18em"  "+=18em"
+                parts = rfxnum.exec(value)//["+=18em", "+=", "18", "em"]
+                if (parts) {
+                    parts[2] = parseFloat(parts[2]) //18
+                    if (parts[3] && parts[ 3 ] !== unit) {//如果存在单位，并且与之前的不一样，需要转换
+                        var clone = node.cloneNode(true)
+                        clone.style.visibility = "none"
+                        clone.style.position = "absolute"
+                        node.parentNode.appendChild(clone)
+                        avalon.css(clone, name, parts[2] + (parts[3] ? parts[3] : 0))
+                        parts[ 2 ] = parseFloat(avalon.css(clone, name))
+                        node.parentNode.removeChild(clone)
+                    }
+                    to = parts[2]
+                    from = parseFloat(from)
+                    if (parts[ 1 ]) {
+                        to = from + (parts[ 1 ] + 1) * parts[ 2 ]
+                    }
+                    parts = [from, to]
+                }
+            }
+        }
+        from = parts[0]
+        to = parts[1]
+        if (from + "" !== to + "") { //不处理初止值都一样的样式与属性
+            tween.start = from
+            tween.end = to
+            tween.unit = unit
+            frame.tweens.push(tween)
         }
     }
 
+    function Tween(options, prop, end) {
+        this.options = options
+        this.elem = this.node
+        this.prop = prop
+        this.end = end
+        this.easing = this.options.easing
+    }
+    Tween.prototype = {
+        cur: function() {
+            var hooks = Tween.propHooks[ this.prop ];
+            return hooks && hooks.get ?
+                    hooks.get(this) :
+                    Tween.propHooks._default.get(this);
+        }
+    }
+
+    Tween.propHooks = {
+        _default: {
+            get: function(tween) {
+                var result = avalon.css(tween.elem, tween.prop)
+                return !result || result === "auto" ? 0 : result
+            },
+            set: function(tween) {
+                avalon.css(tween.elem, tween.prop, tween.now)
+            }
+        },
+        scrollTop: {
+        }
+    };
+    avalon.each(["scrollTop", "scollLeft"], function(name) {
+        Tween.propHooks[name] = {
+            get: function(tween) {
+                return tween.elem[name]
+            },
+            set: function(tween) {
+                tween.elem[name] = tween.now
+            }
+        }
+    })
+
+
+
+
     var rfxnum = new RegExp("^(?:([+-])=|)(" + (/[+-]?(?:\d*\.|)\d+(?:[eE][+-]?\d+|)/).source + ")([a-z%]*)$", "i")
     var root = document.documentElement
-    avalon.mix({
+    avalon.mix(avalon.fx, {
         easing: {//缓动公式
             linear: function(pos) {
                 return pos
@@ -81,11 +184,11 @@ define(["mmPromise"], function(avalon) {
         }
         timeline.length || (clearInterval(insertFrame.id), insertFrame.id = null)
     }
-    //.animate( properties [, duration] [, easing] [, complete] )
-    //.animate( properties, options )
+//.animate( properties [, duration] [, easing] [, complete] )
+//.animate( properties, options )
 
 
-    //==============================裁剪用户传参到可用状态===========================
+//==============================裁剪用户传参到可用状态===========================
     function addOption(frame, p, name) {
         if (p === "slow") {
             frame.duration = 600
@@ -116,7 +219,7 @@ define(["mmPromise"], function(avalon) {
         if (typeof properties === "number") { //如果第一个为数字
             this.duration = properties
         }
-        //如果第二参数是对象
+//如果第二参数是对象
         for (var i = 1; i < arguments.length; i++) {
             addOption(this, arguments[i])
         }
@@ -127,7 +230,7 @@ define(["mmPromise"], function(avalon) {
     }
 
     var effect = avalon.fn.animate = avalon.fn.fx = function(props) {
-        //将多个参数整成两个，第一参数暂时别动
+//将多个参数整成两个，第一参数暂时别动
         var frame = new Frame(this[0])
         addOptions.apply(frame, arguments)//处理第二,第三...参数
         for (var name in props) {//处理第一个参数
@@ -144,8 +247,8 @@ define(["mmPromise"], function(avalon) {
     }
 
     function enterFrame(frame, index) {
-        //驱动主列队的动画实例进行补间动画(update)，
-        //并在动画结束后，从子列队选取下一个动画实例取替自身
+//驱动主列队的动画实例进行补间动画(update)，
+//并在动画结束后，从子列队选取下一个动画实例取替自身
         var node = frame.node,
                 now = +new Date
         if (!frame.startTime) { //第一帧
