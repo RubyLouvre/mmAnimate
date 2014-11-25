@@ -3,19 +3,23 @@ define(["avalon"], function() {
     /*********************************************************************
      *                      主函数                                   *
      **********************************************************************/
-    var effect = avalon.fn.animate =  function(props) {
+    var effect = avalon.fn.animate = function(properties, options) {
         //avalon(elem).animate( properties [, duration] [, easing] [, complete] )
         //avalon(elem).animate( properties, options )
         var frame = new Frame(this[0])
-        addOptions.apply(frame, arguments)//处理第二,第三...参数
-        for (var name in props) {//处理第一个参数
-            var p = avalon.cssName(name) || name
-            if (name !== p) {
-                props[p] = props[name] //转换为驼峰风格borderTopWidth, styleFloat
-                delete props[name] //去掉连字符风格 border-top-width, float
+        if (typeof properties === "number") { //如果第一个为数字
+            frame.duration = properties
+        } else if (typeof properties === "object") {
+            for (var name in properties) {//处理第一个参数
+                var p = avalon.cssName(name) || name
+                if (name !== p) {
+                    properties[p] = properties[name] //转换为驼峰风格borderTopWidth, styleFloat
+                    delete properties[name] //去掉连字符风格 border-top-width, float
+                }
             }
+            frame.props = properties
         }
-        frame.props = props
+        addOptions.apply(frame, arguments)//处理第二,第三...参数
         //将关键帧插入到时间轴中或插到已有的某一帧的子列队,等此帧完毕,让它再进入时间轴
         insertFrame(frame)
         return this
@@ -23,9 +27,6 @@ define(["avalon"], function() {
 
     //分解用户的传参
     function addOptions(properties) {
-        if (typeof properties === "number") { //如果第一个为数字
-            this.duration = properties
-        }
         //如果第二参数是对象
         for (var i = 1; i < arguments.length; i++) {
             addOption(this, arguments[i])
@@ -184,14 +185,15 @@ define(["avalon"], function() {
         timeline.length || (clearInterval(insertFrame.id), insertFrame.id = null)
     }
 
-    function enterFrame(frame) {
+    function enterFrame(frame, index) {
         //驱动主列队的动画实例进行补间动画(update)，
         //并在动画结束后，从子列队选取下一个动画实例取替自身
         var now = +new Date
         if (!frame.startTime) { //第一帧
             frame.fire("before")//动画开始前做些预操作
-            frame.createTweens()
             frame.build()
+            frame.createTweens()
+
             frame.startTime = now
         } else { //中间自动生成的补间
             var per = (now - frame.startTime) / frame.duration
@@ -214,8 +216,9 @@ define(["avalon"], function() {
                     if (!neo) {
                         return false
                     } //如果存在排队的动画,让它继续
+                    timeline[index] = neo
                     neo.troops = frame.troops
-                    insertFrame(frame)
+                    //  insertFrame(frame)
                 }
             }
         }
@@ -230,6 +233,7 @@ define(["avalon"], function() {
         this.troops = []
         this.tweens = []
         this.orig = []
+        this.props = {}
     }
     var root = document.documentElement
 
@@ -294,14 +298,15 @@ define(["avalon"], function() {
                     frame.overflow = null
                 })
             }
-            if (frame.showState === "hide") {
-                frame.bind("after", function() {
+
+            frame.bind("after", function() {
+                if (frame.showState === "hide") {
                     this.style.display = "none"
                     for (var i in frame.orig) { //还原为初始状态
                         avalon.css(this, i, frame.orig[i])
                     }
-                })
-            }
+                }
+            })
             this.build = avalon.noop //让其无效化
         },
         createTweens: function() {
@@ -342,10 +347,11 @@ define(["avalon"], function() {
                 value = hidden ? "show" : "hide"
             }
             if (value === "show") {
-                this.showState = "show"
+                frame.showState = "show"
                 avalon.css(elem, name, 0);
                 parts = [0, parseFloat(from)]
             } else if (value === "hide") {
+                frame.showState = "hide"
                 frame.orig[name] = from
                 parts = [parseFloat(from), 0]
                 value = 0;
