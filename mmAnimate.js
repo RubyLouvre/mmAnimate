@@ -657,7 +657,7 @@ define(["avalon"], function() {
         },
         //如果clearQueue为true，是否清空列队
         //如果gotoEnd 为true，是否跳到此动画最后一帧
-        stop: function(clearQueue, gotoEnd) {
+        stop: function(clearQueue, gotoEnd) { 
             clearQueue = clearQueue ? "1" : ""
             gotoEnd = gotoEnd ? "1" : "0"
             var stopCode = parseInt(clearQueue + gotoEnd, 2) //返回0 1 2 3
