@@ -1,6 +1,8 @@
 
 define(["avalon"], function() {
-
+    /*********************************************************************
+     *                      主函数                                   *
+     **********************************************************************/
 
     var effect = avalon.fn.animate = avalon.fn.fx = function(props) {
         //avalon(elem).animate( properties [, duration] [, easing] [, complete] )
@@ -19,6 +21,53 @@ define(["avalon"], function() {
         insertFrame(frame)
         return this
     }
+
+
+
+    //分解用户的传参
+    function addOptions(properties) {
+        if (typeof properties === "number") { //如果第一个为数字
+            this.duration = properties
+        }
+        //如果第二参数是对象
+        for (var i = 1; i < arguments.length; i++) {
+            addOption(this, arguments[i])
+        }
+        this.duration = typeof this.duration === "number" ? this.duration : 400
+        this.queue = !!(this.queue == null || this.queue) //默认进行排队
+        this.easing = avalon.easing[this.easing] ? this.easing : "swing"
+        this.update = true
+        this.gotoEnd = false
+    }
+
+    function addOption(frame, p, name) {
+        if (p === "slow") {
+            frame.duration = 600
+        } else if (p === "fast") {
+            frame.duration = 200
+        } else {
+            switch (avalon.type(p)) {
+                case "object":
+                    for (var i in p) {
+                        addOption(frame, p[i], i)
+                    }
+                    break
+                case "number":
+                    frame.duration = p
+                    break
+                case "string":
+                    frame.easing = p
+                    break
+                case "function":
+                    name = name || "complete"
+                    frame.bind(name, p)
+                    break
+            }
+        }
+    }
+    /*********************************************************************
+     *                          缓动公式                              *
+     **********************************************************************/
     avalon.mix(effect, {
         fps: 30
     })
@@ -94,50 +143,10 @@ define(["avalon"], function() {
             return bezCoOrd(xForT(t), 1);
         }
     }
-
-
-    //分解用户的传参
-    function addOptions(properties) {
-        if (typeof properties === "number") { //如果第一个为数字
-            this.duration = properties
-        }
-        //如果第二参数是对象
-        for (var i = 1; i < arguments.length; i++) {
-            addOption(this, arguments[i])
-        }
-        this.duration = typeof this.duration === "number" ? this.duration : 400
-        this.queue = !!(this.queue == null || this.queue) //默认进行排队
-        this.easing = avalon.easing[this.easing] ? this.easing : "swing"
-        this.update = true
-        this.gotoEnd = false
-    }
-
-    function addOption(frame, p, name) {
-        if (p === "slow") {
-            frame.duration = 600
-        } else if (p === "fast") {
-            frame.duration = 200
-        } else {
-            switch (avalon.type(p)) {
-                case "object":
-                    for (var i in p) {
-                        addOption(frame, p[i], i)
-                    }
-                    break
-                case "number":
-                    frame.duration = p
-                    break
-                case "string":
-                    frame.easing = p
-                    break
-                case "function":
-                    name = name || "complete"
-                    frame.bind(name, p)
-                    break
-            }
-        }
-    }
-    //==============================中央列队=======================================
+    /*********************************************************************
+     *                      时间轴                                    *
+     **********************************************************************/
+    //一个时间轴中包含许多帧, 一帧里面有各种渐变动画, 渐变的轨迹是由缓动公式所规定
     var timeline = avalon.timeline = [] //时间轴
 
     function insertFrame(frame) { //插入包含关键帧原始信息的帧对象
@@ -214,8 +223,9 @@ define(["avalon"], function() {
         }
         return true
     }
-
-    //帧对象
+    /*********************************************************************
+     *                                  逐帧动画                            *
+     **********************************************************************/
     function Frame(node) {
         this.$events = {}
         this.elem = node
@@ -369,8 +379,9 @@ define(["avalon"], function() {
             delete frame.props[name]
         }
     }
-
-    //缓动对象
+    /*********************************************************************
+     *                                 渐变动画                            *
+     **********************************************************************/
     function Tween(prop, options) {
         this.elem = options.elem
         this.prop = prop
@@ -435,7 +446,9 @@ define(["avalon"], function() {
             }
         }
     })
-
+    /*********************************************************************
+     *                                  原型方法                            *
+     **********************************************************************/
 
     avalon.fn.mix({
         delay: function(ms) {
@@ -496,7 +509,9 @@ define(["avalon"], function() {
             return this
         }
     })
-
+    /*********************************************************************
+     *                                 常用特效                            *
+     **********************************************************************/
     var fxAttrs = [
         ["height", "marginTop", "marginBottom", "borderTopWidth", "borderBottomWidth", "paddingTop", "paddingBottom"],
         ["width", "marginLeft", "marginRight", "borderLeftWidth", "borderRightWidth", "paddingLeft", "paddingRight"],
@@ -547,7 +562,9 @@ define(["avalon"], function() {
             return this.animate.apply(this, args)
         }
     })
-    //=======================转换各种颜色值为RGB数组===========================
+    /*********************************************************************
+     *                      转换各种颜色值为RGB数组                            *
+     **********************************************************************/
     var colorMap = {
         "black": [0, 0, 0],
         "gray": [128, 128, 128],
