@@ -176,14 +176,20 @@ define(["avalon"], function() {
                 stop: (window.webkitCancelAnimationFrame || window.webkitCancelRequestAnimationFrame).bind(window)
             }
         } else {
-            var lastTime = 0
+            var timeLast = 0
+            // http://jsperf.com/date-now-vs-date-gettime/11
+            var now = Date.now || function() {
+                return (new Date).getTime()
+            }
             return {
-                start: function(callback) {
-                    var currTime = new Date().getTime()
-                    var timeToCall = Math.max(0, 16 - (currTime - lastTime))
-                    var id = window.setTimeout(callback, timeToCall)
-                    lastTime = currTime + timeToCall
-                    return id
+                start: function(callback) {//主要用于IE，必须千方百计要提高性能
+                    var timeCurrent = now()
+                    // http://jsperf.com/math-max-vs-comparison/3
+                    var timeDelta = 16 - (timeCurrent - timeLast)
+                    if (timeDelta < 0)
+                        timeDelta = 0
+                    timeLast = timeCurrent + timeDelta
+                    return setTimeout(callback, timeDelta)
                 },
                 stop: function(id) {
                     clearTimeout(id)
