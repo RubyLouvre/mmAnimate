@@ -154,6 +154,46 @@ define(["avalon"], function() {
         }
     }
     /*********************************************************************
+     *                      定时器                                  *
+     **********************************************************************/
+    function AnimationTimer() {
+        //不存在msRequestAnimationFrame，IE10与Chrome24直接用:requestAnimationFrame
+        if (window.requestAnimationFrame) {
+            return {
+                start: requestAnimationFrame.bind(window),
+                stop: cancelAnimationFrame.bind(window)
+            }
+            //Firefox11-没有实现cancelRequestAnimationFrame
+            //并且mozRequestAnimationFrame与标准出入过大
+        } else if (window.mozCancelRequestAnimationFrame && window.mozCancelAnimationFrame) {
+            return {
+                start: mozRequestAnimationFrame.bind(window),
+                stop: mozCancelAnimationFrame.bind(window)
+            }
+        } else if (window.webkitRequestAnimationFrame && webkitRequestAnimationFrame(String)) {
+            return {//修正某个特异的webKit版本下没有time参数
+                start: webkitRequestAnimationFrame.bind(window),
+                stop: (window.webkitCancelAnimationFrame || window.webkitCancelRequestAnimationFrame).bind(window)
+            }
+        } else {
+            var lastTime = 0
+            return {
+                start: function(callback) {
+                    var currTime = new Date().getTime()
+                    var timeToCall = Math.max(0, 16 - (currTime - lastTime))
+                    var id = window.setTimeout(callback, timeToCall)
+                    lastTime = currTime + timeToCall
+                    return id
+                },
+                stop: function(id) {
+                    clearTimeout(id)
+                }
+            };
+        }
+    }
+    var Timer = new AnimationTimer()
+    var TimerID = null
+    /*********************************************************************
      *                      时间轴                                    *
      **********************************************************************/
     /**
@@ -177,12 +217,15 @@ define(["avalon"], function() {
         } else {//插入时间轴
             timeline.push(frame)
         }
-        if (insertFrame.id === null) { //时间轴只要存在帧就会执行定时器
-            insertFrame.id = setInterval(deleteFrame, 1000 / effect.fps)
+        if (!TimerID) { //时间轴只要存在帧就会执行定时器
+            TimerID = Timer.start(function raf() {
+                if (TimerID) {
+                    deleteFrame()
+                    Timer.start(raf)
+                }
+            })
         }
     }
-
-    insertFrame.id = null
 
     function deleteFrame() {
         var i = timeline.length
@@ -194,8 +237,11 @@ define(["avalon"], function() {
                 }
             }
         }
-        //如果时间轴里面没有关键帧,那么停止定时器,节约性能
-        timeline.length || (clearInterval(insertFrame.id), insertFrame.id = null)
+        if (timeline.length === 0) {
+            //如果时间轴里面没有关键帧,那么停止定时器,节约性能
+            Timer.stop(TimerID)
+            TimerID = null
+        }
     }
 
     function enterFrame(frame, index) {
