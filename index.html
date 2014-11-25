@@ -4,20 +4,34 @@
         <meta charset="utf-8">
         <title>动画组件</title>
         <style>
-            .json{
+            #effect1{
                 width:200px;
                 height:200px;
+                display: inline-block;
+                *display: inline;
+                *zoom:1;
                 background:red;
+            }
+            #effect2{
+                width:200px;
+                height:200px;
+                background:blue
             }
         </style>
         <script src="avalon.js"></script>
         <script>
             require("mmAnimate", function(avalon) {
                 avalon.define("fx", function(vm) {
-                    vm.effect = function() {
-                        //  alert( avalon.css(this, "width"))
-                        //  alert( avalon.css(this, "height"))
-                        avalon(this).hide(1000).delay(2000).show(1500)  //.delay(2000).show(1500)
+                    vm.effect1 = function() {
+                        avalon(document.getElementById("effect1")).hide(1000).delay(2000).show(1500)
+                    }
+                    vm.effect2 = function() {
+                        avalon(document.getElementById("effect2")).show(1000, {
+                            before:function(){
+                                this.style.display = "inline-block"
+                                this.style.zoom = 1
+                            }
+                        }).delay(2000).hide(1500)
                     }
                 })
                 avalon.scan()
@@ -26,9 +40,21 @@
     </head>
     <body>
         <p>依赖于mmAnimate</p>
-        <pre class="json" ms-controller="fx" ms-click="effect">
+        <div ms-controller="fx">
+            <div style="height:210px;float:left;">
+                <pre id="effect1" >
 
-        </pre>
+                </pre>
+                <pre id="effect2" style="display: none;float:right">
+
+                </pre>
+             
+            </div>
+               <br clear="both"/>
+            <button ms-click="effect1" type="button">先隐藏再显示</button>
+            <button ms-click="effect2" type="button">先显示再隐藏</button>
+        </div>
+
         <ul>
             <li><a href="fn.fx.html">fx</a></li>
             <li><a href="fn.delay.html">delay</a></li>

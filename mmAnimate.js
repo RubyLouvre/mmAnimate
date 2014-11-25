@@ -191,9 +191,12 @@ define(["avalon"], function() {
         var now = +new Date
         if (!frame.startTime) { //第一帧
             frame.fire("before")//动画开始前做些预操作
-            frame.build()
+            var elem = frame.elem
+            if (avalon.css(elem, "display") === "none" && !elem.dataShow) {
+                frame.build()//如果是一开始就隐藏,那就必须让它显示出来
+            }
             frame.createTweens()
-
+            frame.build()//如果是先hide再show,那么执行createTweens后再执行build则更为平滑
             frame.startTime = now
         } else { //中间自动生成的补间
             var per = (now - frame.startTime) / frame.duration
@@ -234,6 +237,7 @@ define(["avalon"], function() {
         this.tweens = []
         this.orig = []
         this.props = {}
+        this.dataShow = {}
     }
     var root = document.documentElement
 
@@ -267,26 +271,32 @@ define(["avalon"], function() {
             if (elem.nodeType === 1 && ("height" in props || "width" in props)) {
                 //如果是动画则必须将它显示出来
                 frame.overflow = [style.overflow, style.overflowX, style.overflowY]
-
-                var display = elem.getAttribute("olddisplay")
-                if (!display || display === "none") {
-                    display = avalon.parseDisplay(elem.nodeName)
-                    elem.setAttribute("olddisplay", display)
-                }
-                style.display = display
-
-                //修正内联元素的display为inline-block，以让其可以进行width/height的动画渐变
-                if (display === "inline" && avalon.css(elem, "float") === "none") {
-                    if (inlineBlockNeedsLayout) { //IE
-                        if (display === "inline") {
-                            style.display = "inline-block"
-                        } else {
-                            style.display = "inline"
-                            style.zoom = 1
+                var display = style.display || avalon.css(elem, "display")
+                var oldDisplay = elem.getAttribute("olddisplay")
+                if (!oldDisplay) {
+                    if (display === "none") {
+                        style.display = ""//尝试清空行内的display
+                        display = avalon.css(elem, "display")
+                        if (display === "none") {
+                            display = avalon.parseDisplay(elem.nodeName)
                         }
                     }
-                } else { //W3C
-                    elem.style.display = "inline-block"
+                    elem.setAttribute("olddisplay", display)
+                } else {
+                    if (display !== "none") {
+                        elem.setAttribute("olddisplay", display)
+                    } else {
+                        display = oldDisplay
+                    }
+                }
+                style.display = display
+                //修正内联元素的display为inline-block，以让其可以进行width/height的动画渐变
+                if (display === "inline" && avalon.css(elem, "float") === "none") {
+                    if (!inlineBlockNeedsLayout || avalon.parseDisplay(elem.nodeName) === "inline") {
+                        style.display = "inline-block"
+                    } else {
+                        style.zoom = 1
+                    }
                 }
             }
             if (frame.overflow) {
@@ -302,7 +312,9 @@ define(["avalon"], function() {
             frame.bind("after", function() {
                 if (frame.showState === "hide") {
                     this.style.display = "none"
+                    this.dataShow = {}
                     for (var i in frame.orig) { //还原为初始状态
+                        this.dataShow[i] = frame.orig[i]
                         avalon.css(this, i, frame.orig[i])
                     }
                 }
@@ -333,8 +345,9 @@ define(["avalon"], function() {
 
     function createTweenImpl(frame, name, value, hidden) {
         var elem = frame.elem
+        var dataShow = elem.dataShow || {}
         var tween = new Tween(name, frame)
-        var from = tween.cur() //取得起始值
+        var from = dataShow[name] || tween.cur() //取得起始值
         var to
         if (/color$/.test(name)) {
             //用于分解属性包中的样式或属性,变成可以计算的因子
