@@ -1,13 +1,12 @@
 // mmAnimate 2.0 2014.11.25
 /**
- *
  * @cnName 动画引擎
  * @enName mmAnimate
  * @introduce
  * <p>基于单时间轴的动画引擎</p>
  * <h3>使用方法</h3>
  * ```javascript
- * avalon(elem).animate( properties [, duration] [, easing] [, complete] )
+ avalon(elem).animate( properties [, duration] [, easing] [, complete] )
  avalon(elem).animate( properties, options )
  * ```
  */
@@ -16,8 +15,6 @@ define(["avalon"], function() {
      *                      主函数                                   *
      **********************************************************************/
     var effect = avalon.fn.animate = function(properties, options) {
-        //avalon(elem).animate( properties [, duration] [, easing] [, complete] )
-        //avalon(elem).animate( properties, options )
         var frame = new Frame(this[0])
         if (typeof properties === "number") { //如果第一个为数字
             frame.duration = properties
@@ -157,9 +154,11 @@ define(["avalon"], function() {
     /*********************************************************************
      *                      时间轴                                    *
      **********************************************************************/
-    //一个时间轴中包含许多帧, 一帧里面有各种渐变动画, 渐变的轨迹是由缓动公式所规定
+    /**
+     * @other
+     * <p>一个时间轴<code>avalon.timeline</code>中包含许多帧, 一帧里面有各种渐变动画, 渐变的轨迹是由缓动公式所规定</p>
+     */
     var timeline = avalon.timeline = []
-
     function insertFrame(frame) { //插入关键帧
         if (frame.queue) { //如果插入到已有的某一帧的子列队
             var gotoQueue = 1
@@ -243,11 +242,13 @@ define(["avalon"], function() {
      *                                  逐帧动画                            *
      **********************************************************************/
     /**
+     * @other
      * <p>avalon.fn.delay, avalon.fn.slideDown, avalon.fn.slideUp,
      * avalon.fn.slideToggle, avalon.fn.fadeIn, avalon.fn.fadeOut,avalon.fn.fadeToggle
      * avalon.fn.show, avalon.fn.hide, avalon.fn.toggle这些方法其实都是avalon.fn.animate的
-     * 二次包装，包括avalon.fn.animate在内，他们的功能都是往时间轴添加一个帧对象(Frame)
-     * Frame对象拥有以下方法与属性</p>
+     * 二次包装，包括<code>avalon.fn.animate</code>在内，他们的功能都是往时间轴添加一个帧对象(Frame)</p>
+     *<p>帧对象能在时间轴内存在一段时间，持续修改某一元素的N个样式或属性。</p>
+     *<p><strong>Frame</strong>对象拥有以下方法与属性</p>
      <table class="table-doc" border="1">
      <colgroup>
      <col width="180"/> <col width="80"/> <col width="120"/>
@@ -256,23 +257,49 @@ define(["avalon"], function() {
      <th>名字</th><th>类型</th><th>默认值</th><th>说明</th>
      </tr>
      <tr>
-     <td>$events</td><td>{}</td><td></td><td>放置各种回调</td>
+     <td>elem</td><td>Element</td><td></td><td>处于动画状态的元素节点</td>
      </tr>
      <tr>
-     <td>troops</td><td>[]</td><td></td><td>当queue为true，同一个元素产生的帧对象会放在这里</td>
+     <td>$events</td><td>Object</td><td>{}</td><td>放置各种回调</td>
      </tr>
      <tr>
-     <td>tweens</td><td>[]</td><td></td><td>放置各种补间动画Tween</td>
+     <td>troops</td><td>Array</td><td>[]</td><td>当queue为true，同一个元素产生的帧对象会放在这里</td>
      </tr>
      <tr>
-     <td>orig</td><td>{}</td><td></td><td>保存动画之前的样式，用于在隐藏后还原</td>
+     <td>tweens</td><td>Array</td><td>[]</td><td>放置各种补间动画Tween</td>
      </tr>
      <tr>
-     <td>dataShow</td><td>{}</td><td></td><td>保存元素在显示时的各种尺寸，用于在显示前还原</td>
+     <td>orig</td><td>Object</td><td>{}</td><td>保存动画之前的样式，用于在隐藏后还原</td>
      </tr>
      <tr>
-     <td>elem</td><td></td><td></td><td>打算进行动画的元素节点</td>
+     <td>dataShow</td><td>Object</td><td>{}</td><td>保存元素在显示时的各种尺寸，用于在显示前还原</td>
      </tr>
+     
+     <tr>
+     <td>bind(type, fn, unshift)</td><td></td><td></td><td>
+     <table border="1">
+     <tbody><tr>
+     <th style="width:100px">参数名/返回值</th><th style="width:70px">类型</th> <th>说明</th> </tr>
+     <tr>
+     <td>type</td>
+     <td>String</td>
+     <td>事件名</td>
+     </tr>
+     <tr>
+     <td>fn</td>
+     <td>Function</td>
+     <td>回调，this为元素节点</td>
+     </tr>
+     <tr>
+     <td>unshift</td>
+     <td>Undefined|String</td>
+     <td>判定是插在最前还是最后</td>
+     </tr>
+     </tbody></table>
+     </td>
+     </tr>
+     <tr>
+     <td>fire(type, [otherArgs..])</td><td></td><td></td><td>触发回调，可以传N多参数</td></tr>           
      </table>
      */
     function Frame(elem) {
@@ -286,7 +313,7 @@ define(["avalon"], function() {
     }
     var root = document.documentElement
 
-    Frame.isHidden = function(node) {
+    avalon.isHidden = function(node) {
         return  node.sourceIndex === 0 || avalon.css(node, "display") === "none" || !avalon.contains(root, node)
     }
 
@@ -367,7 +394,7 @@ define(["avalon"], function() {
             this.build = avalon.noop //让其无效化
         },
         createTweens: function() {
-            var hidden = Frame.isHidden(this.elem)
+            var hidden = avalon.isHidden(this.elem)
             for (var i in this.props) {
                 createTweenImpl(this, i, this.props[i], hidden)
             }
@@ -449,6 +476,40 @@ define(["avalon"], function() {
     /*********************************************************************
      *                                 渐变动画                            *
      **********************************************************************/
+    /**
+     * @other
+     * <p>渐变动画<code>Tween</code>是我们实现各种特效的最小单位，它用于修改某一个属性值或样式值</p>
+     *<p><strong>Tween</strong>对象拥有以下方法与属性</p>
+     <table class="table-doc" border="1">
+     <colgroup>
+     <col width="180"/> <col width="80"/> <col width="120"/>
+     </colgroup>
+     <tr>
+     <th>名字</th><th>类型</th><th>默认值</th><th>说明</th>
+     </tr>
+     <tr>
+     <td>elem</td><td>Element</td><td></td><td>元素节点</td>
+     </tr>
+     <tr>
+     <td>prop</td><td>String</td><td>""</td><td>属性名或样式名，以驼峰风格存在</td>
+     </tr>
+     <tr>
+     <td>start</td><td>Number</td><td>0</td><td>渐变的开始值</td>
+     </tr>
+     <tr>
+     <td>end</td><td>Number</td><td>0</td><td>渐变的结束值</td>
+     </tr>
+     <tr>
+     <td>now</td><td>Number</td><td>0</td><td>当前值</td>
+     </tr>
+     <tr>
+     <td>run(per, end)</td><td></td><td></td><td>更新元素的某一样式或属性，内部调用</td>
+     </tr>
+     <tr>
+     <td>cur()</td><td></td><td></td><td>取得当前值</td>
+     </tr>
+     </table>
+     */
     function Tween(prop, options) {
         this.elem = options.elem
         this.prop = prop
