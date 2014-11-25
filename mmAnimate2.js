@@ -3,7 +3,7 @@ define(["avalon"], function() {
     /*********************************************************************
      *                      主函数                                   *
      **********************************************************************/
-    var effect = avalon.fn.animate = avalon.fn.fx = function(props) {
+    var effect = avalon.fn.animate =  function(props) {
         //avalon(elem).animate( properties [, duration] [, easing] [, complete] )
         //avalon(elem).animate( properties, options )
         var frame = new Frame(this[0])
@@ -356,7 +356,7 @@ define(["avalon"], function() {
                     parts[2] = parseFloat(parts[2]) //18
                     if (parts[3] && parts[ 3 ] !== unit) {//如果存在单位，并且与之前的不一样，需要转换
                         var clone = elem.cloneNode(true)
-                        clone.style.visibility = "none"
+                        clone.style.visibility = "hidden"
                         clone.style.position = "absolute"
                         elem.parentNode.appendChild(clone)
                         avalon.css(clone, name, parts[2] + (parts[3] ? parts[3] : 0))
