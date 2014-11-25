@@ -1,4 +1,16 @@
 // mmAnimate 2.0 2014.11.25
+/**
+ *
+ * @cnName 动画引擎
+ * @enName mmAnimate
+ * @introduce
+ * <p>基于单时间轴的动画引擎</p>
+ * <h3>使用方法</h3>
+ * ```javascript
+ * avalon(elem).animate( properties [, duration] [, easing] [, complete] )
+ avalon(elem).animate( properties, options )
+ * ```
+ */
 define(["avalon"], function() {
     /*********************************************************************
      *                      主函数                                   *
@@ -230,6 +242,39 @@ define(["avalon"], function() {
     /*********************************************************************
      *                                  逐帧动画                            *
      **********************************************************************/
+    /**
+     * <p>avalon.fn.delay, avalon.fn.slideDown, avalon.fn.slideUp,
+     * avalon.fn.slideToggle, avalon.fn.fadeIn, avalon.fn.fadeOut,avalon.fn.fadeToggle
+     * avalon.fn.show, avalon.fn.hide, avalon.fn.toggle这些方法其实都是avalon.fn.animate的
+     * 二次包装，包括avalon.fn.animate在内，他们的功能都是往时间轴添加一个帧对象(Frame)
+     * Frame对象拥有以下方法与属性</p>
+     <table class="table-doc" border="1">
+     <colgroup>
+     <col width="180"/> <col width="80"/> <col width="120"/>
+     </colgroup>
+     <tr>
+     <th>名字</th><th>类型</th><th>默认值</th><th>说明</th>
+     </tr>
+     <tr>
+     <td>$events</td><td>{}</td><td></td><td>放置各种回调</td>
+     </tr>
+     <tr>
+     <td>troops</td><td>[]</td><td></td><td>当queue为true，同一个元素产生的帧对象会放在这里</td>
+     </tr>
+     <tr>
+     <td>tweens</td><td>[]</td><td></td><td>放置各种补间动画Tween</td>
+     </tr>
+     <tr>
+     <td>orig</td><td>{}</td><td></td><td>保存动画之前的样式，用于在隐藏后还原</td>
+     </tr>
+     <tr>
+     <td>dataShow</td><td>{}</td><td></td><td>保存元素在显示时的各种尺寸，用于在显示前还原</td>
+     </tr>
+     <tr>
+     <td>elem</td><td></td><td></td><td>打算进行动画的元素节点</td>
+     </tr>
+     </table>
+     */
     function Frame(elem) {
         this.$events = {}
         this.elem = elem
