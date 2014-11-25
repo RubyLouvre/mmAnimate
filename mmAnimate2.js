@@ -17,12 +17,10 @@ define(["avalon"], function() {
             }
         }
         frame.props = props
-        //包含关键帧的原始信息的对象到主列队或子列队
+        //将关键帧插入到时间轴中或插到已有的某一帧的子列队,等此帧完毕,让它再进入时间轴
         insertFrame(frame)
         return this
     }
-
-
 
     //分解用户的传参
     function addOptions(properties) {
@@ -33,11 +31,11 @@ define(["avalon"], function() {
         for (var i = 1; i < arguments.length; i++) {
             addOption(this, arguments[i])
         }
-        this.duration = typeof this.duration === "number" ? this.duration : 400
-        this.queue = !!(this.queue == null || this.queue) //默认进行排队
-        this.easing = avalon.easing[this.easing] ? this.easing : "swing"
-        this.update = true
-        this.gotoEnd = false
+        this.duration = typeof this.duration === "number" ? this.duration : 400//动画时长
+        this.queue = !!(this.queue == null || this.queue) //是否插入子列队
+        this.easing = avalon.easing[this.easing] ? this.easing : "swing"//缓动公式的名字
+        this.update = true //是否能更新
+        this.gotoEnd = false//是否立即跑到最后一帧
     }
 
     function addOption(frame, p, name) {
@@ -58,7 +56,7 @@ define(["avalon"], function() {
                 case "string":
                     frame.easing = p
                     break
-                case "function":
+                case "function"://绑定各种回调
                     name = name || "complete"
                     frame.bind(name, p)
                     break
@@ -147,10 +145,10 @@ define(["avalon"], function() {
      *                      时间轴                                    *
      **********************************************************************/
     //一个时间轴中包含许多帧, 一帧里面有各种渐变动画, 渐变的轨迹是由缓动公式所规定
-    var timeline = avalon.timeline = [] //时间轴
+    var timeline = avalon.timeline = [] 
 
-    function insertFrame(frame) { //插入包含关键帧原始信息的帧对象
-        if (frame.queue) { //如果指定要排队
+    function insertFrame(frame) { //插入关键帧
+        if (frame.queue) { //如果插入到已有的某一帧的子列队
             var gotoQueue = 1
             for (var i = timeline.length, el; el = timeline[--i]; ) {
                 if (el.elem === frame.elem) { //★★★第一步
@@ -162,10 +160,10 @@ define(["avalon"], function() {
             if (gotoQueue) { //★★★第二步
                 timeline.unshift(frame)
             }
-        } else {
+        } else {//插入时间轴
             timeline.push(frame)
         }
-        if (insertFrame.id === null) { //只要数组中有一个元素就开始运行
+        if (insertFrame.id === null) { //时间轴只要存在帧就会执行定时器
             insertFrame.id = setInterval(deleteFrame, 1000 / avalon.fps)
         }
     }
@@ -173,19 +171,20 @@ define(["avalon"], function() {
     insertFrame.id = null
 
     function deleteFrame() {
-        //执行动画与尝试删除已经完成或被强制完成的帧对象
         var i = timeline.length
         while (--i >= 0) {
             if (!timeline[i].paused) { //如果没有被暂停
+                //如果返回false或元素不存在,就从时间轴中删掉此关键帧
                 if (!(timeline[i].elem && enterFrame(timeline[i], i))) {
                     timeline.splice(i, 1)
                 }
             }
         }
+        //如果时间轴里面没有关键帧,那么停止定时器,节约性能
         timeline.length || (clearInterval(insertFrame.id), insertFrame.id = null)
     }
 
-    function enterFrame(frame, index) {
+    function enterFrame(frame) {
         //驱动主列队的动画实例进行补间动画(update)，
         //并在动画结束后，从子列队选取下一个动画实例取替自身
         var now = +new Date
@@ -393,13 +392,13 @@ define(["avalon"], function() {
 
     Tween.prototype = {
         constructor: Tween,
-        cur: function() {
+        cur: function() {//取得当前值
             var hooks = Tween.propHooks[ this.prop ]
             return hooks && hooks.get ?
                     hooks.get(this) :
                     Tween.propHooks._default.get(this)
         },
-        run: function(per, end) {
+        run: function(per, end) {//更新元素的某一样式或属性
             this.update(per, end)
             var hook = Tween.propHooks[ this.prop ]
             if (hook && hook.set) {
