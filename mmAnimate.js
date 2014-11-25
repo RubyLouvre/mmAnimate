@@ -18,6 +18,9 @@ define(["avalon"], function() {
         var frame = new Frame(this[0])
         if (typeof properties === "number") { //如果第一个为数字
             frame.duration = properties
+            if (arguments.length === 1) {
+                frame.update = false
+            }
         } else if (typeof properties === "object") {
             for (var name in properties) {//处理第一个参数
                 var p = avalon.cssName(name) || name
@@ -43,7 +46,6 @@ define(["avalon"], function() {
         this.duration = typeof this.duration === "number" ? this.duration : 400//动画时长
         this.queue = !!(this.queue == null || this.queue) //是否插入子列队
         this.easing = avalon.easing[this.easing] ? this.easing : "swing"//缓动公式的名字
-        this.update = true //是否能更新
         this.gotoEnd = false//是否立即跑到最后一帧
     }
 
@@ -201,13 +203,11 @@ define(["avalon"], function() {
         //并在动画结束后，从子列队选取下一个动画实例取替自身
         var now = +new Date
         if (!frame.startTime) { //第一帧
-            frame.fire("before")//动画开始前做些预操作
-            var elem = frame.elem
-//            if (avalon.css(elem, "display") === "none" && !elem.dataShow) {
-//                frame.build()//如果是一开始就隐藏,那就必须让它显示出来
-//            }
-            frame.createTweens()
-            frame.build()//如果是先hide再show,那么执行createTweens后再执行build则更为平滑
+            if (frame.update) {
+                frame.fire("before")//动画开始前做些预操作
+                frame.createTweens()
+                frame.build()//如果是先hide再show,那么执行createTweens后再执行build则更为平滑
+            }
             frame.startTime = now
         } else { //中间自动生成的补间
             var per = (now - frame.startTime) / frame.duration
@@ -232,7 +232,6 @@ define(["avalon"], function() {
                     } //如果存在排队的动画,让它继续
                     timeline[index] = neo
                     neo.troops = frame.troops
-                    //  insertFrame(frame)
                 }
             }
         }
@@ -310,6 +309,7 @@ define(["avalon"], function() {
         this.orig = []
         this.props = {}
         this.dataShow = {}
+        this.update = true //是否能更新
     }
     var root = document.documentElement
 
@@ -335,9 +335,6 @@ define(["avalon"], function() {
             var frame = this
             var elem = frame.elem
             var props = frame.props
-             if(!frame.tweens.length){
-                 return
-             }
             var style = elem.style
             var inlineBlockNeedsLayout = !window.getComputedStyle
             //show 开始时计算其width1 height1 保存原来的width height display改为inline-block或block overflow处理 赋值（width1，height1）
