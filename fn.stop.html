@@ -18,7 +18,7 @@
                 avalon.define("fx", function(vm) {
                     vm.start = function() {
                      
-                        box.fx({width: "+=100"}, 2000).fx({height: "+=100"}, 2000)
+                        box.animate({width: "+=100"}, 2000).animate({height: "+=100"}, 2000)
                     }
                     vm.reset = function() {
                         box.width(10).height(10)
@@ -81,7 +81,7 @@
                 var box = avalon(document.getElementById("test"));
                 avalon.define("fx", function(vm) {
                     vm.start = function() {
-                        box.fx({width: "+=100"}, 2000).fx({height: "+=100"}, 2000)
+                        box.animate({width: "+=100"}, 2000).animate({height: "+=100"}, 2000)
                     }
                     vm.reset = function() {
                         box.width(10).height(10)

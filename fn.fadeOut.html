@@ -28,7 +28,7 @@
         </script>
         <style type="text/css">
 
-            .box { height:100px; width:200px; background:#090; }
+            .box { height:100px; width:200px; background:#090; display: inline-block;}
 
 
         </style>
@@ -60,7 +60,7 @@
                     <button id="btn2"  ms-click="effect2">yyy</button>
                 </p>
 
-                <div ms-controller="fx"><span ms-if="show1">#box1</span><span ms-if="show2">#box2</span></div>
+                <div ms-controller="fx"><span ms-if="show1" class="box">#box1</span><span ms-if="show2" class="box">#box2</span></div>
 
 
                 <br/>

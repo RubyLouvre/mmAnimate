@@ -586,7 +586,7 @@ define(["avalon"], function() {
         pause: function() {
             var cur = this[0]
             for (var i = 0, frame; frame = timeline[i]; i++) {
-                if (frame.elme === cur) {
+                if (frame.elem === cur) {
                     frame.paused = new Date - 0
                 }
             }
@@ -615,19 +615,19 @@ define(["avalon"], function() {
                     frame.gotoEnd = true
                     switch (stopCode) { //如果此时调用了stop方法
                         case 0:
-                            //中断当前动画，继续下一个动画
+                            // false false 中断当前动画，继续下一个动画
                             frame.update = frame.revert = false
                             break
                         case 1:
-                            //立即跳到最后一帧，继续下一个动画
+                            // false true立即跳到最后一帧，继续下一个动画
                             frame.revert = false
                             break
                         case 2:
-                            //清空该元素的所有动画
+                            // true false清空该元素的所有动画
                             delete frame.elem
                             break
                         case 3:
-                            //立即完成该元素的所有动画
+                            // true true 立即完成该元素的所有动画
                             frame.troops.forEach(function(a) {
                                 a.gotoEnd = true
                             })
