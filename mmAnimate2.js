@@ -502,6 +502,51 @@ define(["avalon"], function() {
         ["width", "marginLeft", "marginRight", "borderLeftWidth", "borderRightWidth", "paddingLeft", "paddingRight"],
         ["opacity"]
     ]
+    function genFx(type, num) { //生成属性包
+        var obj = {}
+        fxAttrs.concat.apply([], fxAttrs.slice(0, num)).forEach(function(name) {
+            obj[name] = type
+            if (~name.indexOf("margin")) {
+                Tween.propHooks[name] = {
+                    get: Tween.propHooks._default.get,
+                    set: function(tween) {
+                        tween.elem.style[tween.name] = Math.max(tween.now, 0) + tween.unit
+                    }
+                }
+            }
+        })
+        return obj
+    }
+
+
+    var effects = {
+        slideDown: genFx("show", 1),
+        slideUp: genFx("hide", 1),
+        slideToggle: genFx("toggle", 1),
+        fadeIn: {
+            opacity: "show"
+        },
+        fadeOut: {
+            opacity: "hide"
+        },
+        fadeToggle: {
+            opacity: "toggle"
+        }
+    }
+
+    avalon.each(effects, function(method, props) {
+        avalon.fn[method] = function() {
+            var args = [].concat.apply([props], arguments)
+            return this.animate.apply(this, args)
+        }
+    })
+
+    String("toggle,show,hide").replace(avalon.rword, function(name) {
+        avalon.fn[name] = function() {
+            var args = [].concat.apply([genFx(name, 3)], arguments)
+            return this.animate.apply(this, args)
+        }
+    })
     //=======================转换各种颜色值为RGB数组===========================
     var colorMap = {
         "black": [0, 0, 0],
