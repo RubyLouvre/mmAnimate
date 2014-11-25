@@ -3,7 +3,6 @@ define(["avalon"], function() {
     /*********************************************************************
      *                      主函数                                   *
      **********************************************************************/
-
     var effect = avalon.fn.animate = avalon.fn.fx = function(props) {
         //avalon(elem).animate( properties [, duration] [, easing] [, complete] )
         //avalon(elem).animate( properties, options )
@@ -146,7 +145,7 @@ define(["avalon"], function() {
      *                      时间轴                                    *
      **********************************************************************/
     //一个时间轴中包含许多帧, 一帧里面有各种渐变动画, 渐变的轨迹是由缓动公式所规定
-    var timeline = avalon.timeline = [] 
+    var timeline = avalon.timeline = []
 
     function insertFrame(frame) { //插入关键帧
         if (frame.queue) { //如果插入到已有的某一帧的子列队
@@ -304,6 +303,7 @@ define(["avalon"], function() {
                     }
                 })
             }
+            this.build = avalon.noop //让其无效化
         },
         createTweens: function() {
             var hidden = Frame.isHidden(this.elem)
@@ -313,10 +313,13 @@ define(["avalon"], function() {
         },
         revertTweens: function() {
             for (var i = 0, tween; tween = this.tweens[i++]; ) {
-                var start = this.start
-                var end = this.end
-                this.start = end
-                this.end = start
+                var start = tween.start
+                var end = tween.end
+                tween.start = end
+                tween.end = start
+                this.props[tween.name] = Array.isArray(tween.start) ?
+                        "rgb(" + tween.start + ")" :
+                        (tween.unit ? tween.start + tween.unit : tween.start)
             }
             this.revert = !this.revert
         }
@@ -340,6 +343,7 @@ define(["avalon"], function() {
                 value = hidden ? "show" : "hide"
             }
             if (value === "show") {
+                this.showState = "show"
                 avalon.css(elem, name, 0);
                 parts = [0, parseFloat(from)]
             } else if (value === "hide") {
@@ -370,7 +374,7 @@ define(["avalon"], function() {
         }
         from = parts[0]
         to = parts[1]
-        if (from + "" !== to + "") { //不处理初止值都一样的样式与属性
+        if (from + "" !== to + "") { //不处理起止值都一样的样式与属性
             tween.start = from
             tween.end = to
             tween.unit = unit
