@@ -203,9 +203,9 @@ define(["avalon"], function() {
         if (!frame.startTime) { //第一帧
             frame.fire("before")//动画开始前做些预操作
             var elem = frame.elem
-            if (avalon.css(elem, "display") === "none" && !elem.dataShow) {
-                frame.build()//如果是一开始就隐藏,那就必须让它显示出来
-            }
+//            if (avalon.css(elem, "display") === "none" && !elem.dataShow) {
+//                frame.build()//如果是一开始就隐藏,那就必须让它显示出来
+//            }
             frame.createTweens()
             frame.build()//如果是先hide再show,那么执行createTweens后再执行build则更为平滑
             frame.startTime = now
@@ -335,42 +335,46 @@ define(["avalon"], function() {
             var frame = this
             var elem = frame.elem
             var props = frame.props
+             if(!frame.tweens.length){
+                 return
+             }
             var style = elem.style
             var inlineBlockNeedsLayout = !window.getComputedStyle
             //show 开始时计算其width1 height1 保存原来的width height display改为inline-block或block overflow处理 赋值（width1，height1）
             //hide 保存原来的width height 赋值为(0,0) overflow处理 结束时display改为none;
             //toggle 开始时判定其是否隐藏，使用再决定使用何种策略
-            if (elem.nodeType === 1 && ("height" in props || "width" in props)) {
-                //如果是动画则必须将它显示出来
+            //如果是动画则必须将它显示出来
+            if ("height" in props || "width" in props) {
                 frame.overflow = [style.overflow, style.overflowX, style.overflowY]
-                var display = style.display || avalon.css(elem, "display")
-                var oldDisplay = elem.getAttribute("olddisplay")
-                if (!oldDisplay) {
+            }
+            var display = style.display || avalon.css(elem, "display")
+            var oldDisplay = elem.getAttribute("olddisplay")
+            if (!oldDisplay) {
+                if (display === "none") {
+                    style.display = ""//尝试清空行内的display
+                    display = avalon.css(elem, "display")
                     if (display === "none") {
-                        style.display = ""//尝试清空行内的display
-                        display = avalon.css(elem, "display")
-                        if (display === "none") {
-                            display = avalon.parseDisplay(elem.nodeName)
-                        }
+                        display = avalon.parseDisplay(elem.nodeName)
                     }
+                }
+                elem.setAttribute("olddisplay", display)
+            } else {
+                if (display !== "none") {
                     elem.setAttribute("olddisplay", display)
                 } else {
-                    if (display !== "none") {
-                        elem.setAttribute("olddisplay", display)
-                    } else {
-                        display = oldDisplay
-                    }
-                }
-                style.display = display
-                //修正内联元素的display为inline-block，以让其可以进行width/height的动画渐变
-                if (display === "inline" && avalon.css(elem, "float") === "none") {
-                    if (!inlineBlockNeedsLayout || avalon.parseDisplay(elem.nodeName) === "inline") {
-                        style.display = "inline-block"
-                    } else {
-                        style.zoom = 1
-                    }
+                    display = oldDisplay
                 }
             }
+            style.display = display
+            //修正内联元素的display为inline-block，以让其可以进行width/height的动画渐变
+            if (display === "inline" && avalon.css(elem, "float") === "none") {
+                if (!inlineBlockNeedsLayout || avalon.parseDisplay(elem.nodeName) === "inline") {
+                    style.display = "inline-block"
+                } else {
+                    style.zoom = 1
+                }
+            }
+
             if (frame.overflow) {
                 style.overflow = "hidden"
                 frame.bind("after", function() {

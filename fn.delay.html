@@ -8,14 +8,14 @@
             require("mmAnimate", function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.effect1 = function() {
-                        avalon(this).slideUp(300).animate(2000).fadeIn(400).hide(1000, function(){
-                            console.log("hide")
-                        }).show(1000, function(){
-                            console.log("show")
+                        avalon(this).slideUp(300).animate(1000).fadeIn(1200).hide(1000, function() {
+                            avalon.log("hide")
+                        }).show(1000, function() {
+                            avalon.log("show")
                         });
                     }
                     vm.effect2 = function() {
-                        avalon(this).slideUp(300).fadeIn(400).hide(1000).show(1000);
+                          avalon(this).slideUp(300).fadeIn(1400).hide(1000).show(1000);
                     }
                 })
                 avalon.scan()
@@ -49,14 +49,14 @@
            require("mmAnimate", function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.effect1 = function() {
-                        avalon(this).slideUp(300).animate(2000).fadeIn(400).hide(1000,function(){
-                           console.log("hide")
-                       }).show(1000, function(){
-                            console.log("show")
-                       });
+                        avalon(this).slideUp(300).animate(1000).fadeIn(1200).hide(1000, function() {
+                            avalon.log("hide")
+                        }).show(1000, function() {
+                            avalon.log("show")
+                        });
                     }
                       vm.effect2 = function() {
-                        avalon(this).slideUp(300).fadeIn(400).hide(1000).show(1000);
+                        avalon(this).slideUp(300).fadeIn(1400).hide(1000).show(1000);
                     }
                 })
                 avalon.scan()
