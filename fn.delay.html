@@ -8,7 +8,11 @@
             require("mmAnimate", function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.effect1 = function() {
-                        avalon(this).slideUp(300).fx(2000).fadeIn(400).hide(1000).show(1000);
+                        avalon(this).slideUp(300).animate(2000).fadeIn(400).hide(1000, function(){
+                            console.log("hide")
+                        }).show(1000, function(){
+                            console.log("show")
+                        });
                     }
                     vm.effect2 = function() {
                         avalon(this).slideUp(300).fadeIn(400).hide(1000).show(1000);
@@ -45,7 +49,11 @@
            require("mmAnimate", function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.effect1 = function() {
-                        avalon(this).slideUp(300).fx(2000).fadeIn(400).hide(1000).show(1000);
+                        avalon(this).slideUp(300).animate(2000).fadeIn(400).hide(1000,function(){
+                           console.log("hide")
+                       }).show(1000, function(){
+                            console.log("show")
+                       });
                     }
                       vm.effect2 = function() {
                         avalon(this).slideUp(300).fadeIn(400).hide(1000).show(1000);
