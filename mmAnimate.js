@@ -43,11 +43,13 @@ define(["avalon"], function() {
         for (var i = 1; i < arguments.length; i++) {
             addOption(this, arguments[i])
         }
-        this.duration = typeof this.duration === "number" ? this.duration : 400//动画时长
         this.queue = !!(this.queue == null || this.queue) //是否插入子列队
         this.easing = avalon.easing[this.easing] ? this.easing : "swing"//缓动公式的名字
         this.count = (this.count === Infinity || isIndex(this.count)) ? this.count : 1
         this.gotoEnd = false//是否立即跑到最后一帧
+        var duration = this.duration
+        this.duration = typeof duration === "number" ? duration : /^\d+ms$/.test(duration) ?
+                parseFloat(duration) : /^\d+s$/.test(duration) ? parseFloat(duration) * 1000 : 400 //动画时长
     }
     function isIndex(s) {//判定是非负整数，可以作为索引的
         return +s === s >>> 0;
@@ -267,7 +269,7 @@ define(["avalon"], function() {
         if (!frame.startTime) { //第一帧
             if (frame.playState) {
                 frame.fire("before")//动画开始前做些预操作
-                if(avalon.css(frame.elem, "display") === "none" && !frame.elem.dataShow){
+                if (avalon.css(frame.elem, "display") === "none" && !frame.elem.dataShow) {
                     frame.build()
                 }
                 frame.createTweens()
