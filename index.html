@@ -27,7 +27,7 @@
                     }
                     vm.effect2 = function() {
                         avalon(document.getElementById("effect2")).show(1000, {
-                            before:function(){
+                            before: function() {
                                 this.style.display = "inline-block"
                                 this.style.zoom = 1
                             }
@@ -48,9 +48,9 @@
                 <pre id="effect2" style="display: none;float:right">
 
                 </pre>
-             
+
             </div>
-               <br clear="both"/>
+            <br clear="both"/>
             <button ms-click="effect1" type="button">先隐藏再显示</button>
             <button ms-click="effect2" type="button">先显示再隐藏</button>
         </div>
@@ -67,6 +67,7 @@
             <li><a href="fn.slideToggle.html">slideToggle</a></li>
             <li><a href="fn.stop.html">stop</a></li>
             <li><a href="color.html">color</a></li>
+            <li><a href="count.html">count 与 revert配置项的使用</a></li>
             <li><a href="scrollTop.html">scrollTop/scrollleft</a></li>
         </ul>
     </body>

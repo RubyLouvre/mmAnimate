@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />        
+        <title>count</title>
+        <script src="avalon.js"></script>
+        <script>
+            require("mmAnimate", function(avalon) {
+                avalon.define("fx", function(vm) {
+                    vm.effect = function() {
+                        avalon(this).animate({top: 400}, {count: 10, duration: 1000})
+                    }
+                    var index = 0
+                    vm.effect2 = function() {
+                        avalon(this).animate({top: 400}, {count: 10, duration: 1000, revert: true, after: function(){
+                                this.innerHTML = ++index
+                        }})
+                    }
+                })
+                avalon.scan()
+            })
+        </script>
+        <style type="text/css">
+            #sample{
+                border:1px #f00 solid;
+                height: 410px;
+                position: relative;
+            }
+            #sample div { 
+                position: absolute;
+                width:70px;
+                height:70px;
+                margin:3px; 
+                text-align: center;
+                background:#a9ea00; 
+            }
+        </style>
+
+    </head>
+    <body>
+        <article>
+            <h3>count</h3>
+            <p><span class="stress">描述：</span></p>
+            <p>指定动画的播放次数, 要求是非负整数或infinite</p>
+
+            <p><span class="stress">返回值：</span></p>
+            <p>avalon实例</p>
+            <fieldset ><legend>例子</legend>
+                <pre class="brush:javascript;gutter:false;toolbar:false">
+            require("mmAnimate", function(avalon) {
+                avalon.define("fx", function(vm) {
+                  
+                    vm.effect = function() {
+                       avalon(this).animate({top: 400},{count: 10, duration: 1000})
+                    }
+
+                })
+                avalon.scan()
+            })
+                </pre>
+                <div id="sample" ms-controller="fx" >
+                    <div ms-click="effect"></div>
+                </div>
+
+            </fieldset>
+            <fieldset ><legend>例子</legend>
+                <pre class="brush:javascript;gutter:false;toolbar:false">
+            require("mmAnimate", function(avalon) {
+                avalon.define("fx", function(vm) {
+                    vm.effect2 = function() {
+                       avalon(this).animate({top: 400},{count: 10, duration: 1000, revert: true})
+                    }
+                })
+                avalon.scan()
+            })
+                </pre>
+                <div id="sample" ms-controller="fx" >
+                    <div ms-click="effect2"></div>
+                </div>
+
+            </fieldset>
+
+        </article>
+    </body>
+</html>

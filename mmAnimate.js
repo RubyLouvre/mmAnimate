@@ -19,7 +19,7 @@ define(["avalon"], function() {
         if (typeof properties === "number") { //如果第一个为数字
             frame.duration = properties
             if (arguments.length === 1) {
-                frame.update = false
+                frame.playState = false
             }
         } else if (typeof properties === "object") {
             for (var name in properties) {//处理第一个参数
@@ -46,40 +46,41 @@ define(["avalon"], function() {
         this.duration = typeof this.duration === "number" ? this.duration : 400//动画时长
         this.queue = !!(this.queue == null || this.queue) //是否插入子列队
         this.easing = avalon.easing[this.easing] ? this.easing : "swing"//缓动公式的名字
+        this.count = (this.count === Infinity || isIndex(this.count)) ? this.count : 1
         this.gotoEnd = false//是否立即跑到最后一帧
     }
     function isIndex(s) {//判定是非负整数，可以作为索引的
         return +s === s >>> 0;
     }
     function addOption(frame, p, name) {
-        if (p === "slow") {
-            frame.duration = 600
-        } else if (p === "fast") {
-            frame.duration = 200
-        } else {
+        if (!name) {
             switch (avalon.type(p)) {
                 case "object":
                     for (var i in p) {
                         addOption(frame, p[i], i)
                     }
                     break
-                case "boolean":
-                    frame.revert = p
-                    break
                 case "number":
-                    if (name === "count") {
-                        frame.count = (p === Infinity || isIndex(p)) ? p : 1
-                    } else {
-                        frame.duration = p
-                    }
+                    frame.duration = p
                     break
                 case "string":
-                    frame.easing = p
+                    if (p === "slow") {
+                        frame.duration = 600
+                    } else if (p === "fast") {
+                        frame.duration = 200
+                    } else {
+                        frame.easing = p
+                    }
                     break
                 case "function"://绑定各种回调
-                    name = name || "complete"
-                    frame.bind(name, p)
+                    frame.bind("complete", p)
                     break
+            }
+        } else {
+            if (typeof p === "function") {
+                frame.bind(name, p)
+            } else {
+                frame[name] = p
             }
         }
     }
@@ -465,7 +466,6 @@ define(["avalon"], function() {
             }
         },
         revertTweens: function() {
-            console.log("++++++++++++++++")
             for (var i = 0, tween; tween = this.tweens[i++]; ) {
                 var start = tween.start
                 var end = tween.end
@@ -475,7 +475,6 @@ define(["avalon"], function() {
                         "rgb(" + tween.start + ")" :
                         (tween.unit ? tween.start + tween.unit : tween.start)
             }
-            //  this.revert = !this.revert
         }
     }
 
