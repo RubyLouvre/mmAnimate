@@ -33,6 +33,7 @@ define(["avalon"], function() {
         }
         addOptions.apply(frame, arguments)//处理第二,第三...参数
         //将关键帧插入到时间轴中或插到已有的某一帧的子列队,等此帧完毕,让它再进入时间轴
+        console.log(frame)
         insertFrame(frame)
         return this
     }
@@ -48,8 +49,11 @@ define(["avalon"], function() {
         this.easing = avalon.easing[this.easing] ? this.easing : "swing"//缓动公式的名字
         this.gotoEnd = false//是否立即跑到最后一帧
     }
-
+    function isIndex(s) {//判定是非负整数，可以作为索引的
+        return +s === s >>> 0;
+    }
     function addOption(frame, p, name) {
+        console.log(p)
         if (p === "slow") {
             frame.duration = 600
         } else if (p === "fast") {
@@ -62,7 +66,11 @@ define(["avalon"], function() {
                     }
                     break
                 case "number":
-                    frame.duration = p
+                    if (name === "count") {
+                        frame.count  = (p === Infinity || isIndex(p)) ? p : 1
+                    } else {
+                        frame.duration = p
+                    }
                     break
                 case "string":
                     frame.easing = p
@@ -272,6 +280,7 @@ define(["avalon"], function() {
             }
             if (end) { //最后一帧
                 frame.count--
+                console.log("+++++++++++++")
                 frame.fire("after") //动画结束后执行的一些收尾工作
                 if (frame.count === 0) {
                     frame.fire("complete") //执行用户回调
@@ -284,6 +293,7 @@ define(["avalon"], function() {
                 } else {
                     delete this.startTime
                     this.gotoEnd = false
+                    console.log("+++++++++++++")
                     if (frame.revert)  //如果设置了倒带
                         this.revertTweens()
                 }
