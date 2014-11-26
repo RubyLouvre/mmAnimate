@@ -47,7 +47,6 @@ define(["avalon"], function() {
         for (var i = 1; i < arguments.length; i++) {
             addOption(this, arguments[i])
         }
-        console.log(properties)
         this.queue = !!(this.queue == null || this.queue) //是否插入子列队
         this.easing = bezier[this.easing] ? this.easing : "linear"//缓动公式的名字
         this.count = (this.count === Infinity || isIndex(this.count)) ? this.count : 1
@@ -241,7 +240,14 @@ define(["avalon"], function() {
             if (end || frame.count === 0) { //最后一帧
                 frame.count--
                 frame.fire("after") //动画结束后执行的一些收尾工作
-
+                var style = frame.elem.style
+                frame.tweens.forEach(function(el) {
+                    if (el.prop in style) {
+                        style[el.prop] = el.end + el.unit
+                    } else {
+                        frame.elem[el.prop] = el.end
+                    }
+                })
                 if (frame.count <= 0) {
                     frame.deleteKeyFrame()
                     frame.fire("complete") //执行用户回调
@@ -477,7 +483,7 @@ define(["avalon"], function() {
         var to
         if (/color$/i.test(name)) {
             //用于分解属性包中的样式或属性,变成可以计算的因子
-            parts = [color2array(from), color2array(value)]
+            parts = [from, value]
         } else {
             parts = rfxnum.exec(from)
             var unit = parts && parts[ 3 ] || (avalon.cssNumber[ name ] ? "" : "px")
