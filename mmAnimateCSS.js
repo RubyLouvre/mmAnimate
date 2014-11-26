@@ -23,6 +23,10 @@ define(["avalon"], function() {
             }
         } else if (typeof properties === "object") {
             for (var name in properties) {//处理第一个参数
+                if (name === "frameName") {
+                    frame.frameName = properties.frameName
+                    continue
+                }
                 var p = avalon.cssName(name) || name
                 if (name !== p) {
                     properties[p] = properties[name] //转换为驼峰风格borderTopWidth, styleFloat
@@ -43,11 +47,11 @@ define(["avalon"], function() {
         for (var i = 1; i < arguments.length; i++) {
             addOption(this, arguments[i])
         }
+        console.log(properties)
         this.queue = !!(this.queue == null || this.queue) //是否插入子列队
         this.easing = bezier[this.easing] ? this.easing : "linear"//缓动公式的名字
         this.count = (this.count === Infinity || isIndex(this.count)) ? this.count : 1
         this.gotoEnd = false//是否立即跑到最后一帧
-        this.frameName = this.frameName || "fx" + Date.now()
         var duration = this.duration
         this.duration = typeof duration === "number" ? duration : /^\d+ms$/.test(duration) ? parseFloat(duration) :
                 /^\d+s$/.test(duration) ? parseFloat(duration) * 1000 : 400 //动画时长
@@ -216,6 +220,7 @@ define(["avalon"], function() {
         //并在动画结束后，从子列队选取下一个动画实例取替自身
         var now = +new Date
         if (!frame.startTime) { //第一帧
+            avalon.log(frame.frameName + "!!!!!!!!")
             if (frame.playState) {
                 frame.fire("before")//动画开始前做些预操作
                 if (avalon.css(frame.elem, "display") === "none" && !frame.elem.dataShow) {
@@ -236,7 +241,9 @@ define(["avalon"], function() {
             if (end || frame.count === 0) { //最后一帧
                 frame.count--
                 frame.fire("after") //动画结束后执行的一些收尾工作
+
                 if (frame.count <= 0) {
+                    frame.deleteKeyFrame()
                     frame.fire("complete") //执行用户回调
                     var neo = frame.troops.shift()
                     if (!neo) {
@@ -245,8 +252,7 @@ define(["avalon"], function() {
                     timeline[index] = neo
                     neo.troops = frame.troops
                 } else {
-                    delete frame.startTime
-                    frame.gotoEnd = false
+                    frame.startTime = frame.gotoEnd = false
                     if (frame.revert)  //如果设置了倒带
                         frame.revertTweens()
                 }
@@ -327,10 +333,10 @@ define(["avalon"], function() {
         this.elem = elem
         this.troops = []
         this.tweens = []
-        this.orig = []
+        this.orig = {}
         this.props = {}
-        this.dataShow = {}
         this.count = 1
+        this.frameName = "fx" + Date.now()
         this.playState = true //是否能更新
     }
     var $playState = avalon.cssName("animation-play-state")
@@ -387,11 +393,7 @@ define(["avalon"], function() {
             style.display = display
             //修正内联元素的display为inline-block，以让其可以进行width/height的动画渐变
             if (display === "inline" && avalon.css(elem, "float") === "none") {
-                if (!inlineBlockNeedsLayout || avalon.parseDisplay(elem.nodeName) === "inline") {
-                    style.display = "inline-block"
-                } else {
-                    style.zoom = 1
-                }
+                style.display = "inline-block"
             }
 
             if (frame.overflow) {
@@ -651,14 +653,6 @@ define(["avalon"], function() {
         var obj = {}
         fxAttrs.concat.apply([], fxAttrs.slice(0, num)).forEach(function(name) {
             obj[name] = type
-            if (~name.indexOf("margin")) {
-                Tween.propHooks[name] = {
-                    get: Tween.propHooks._default.get,
-                    set: function(tween) {
-                        tween.elem.style[tween.name] = Math.max(tween.now, 0) + tween.unit
-                    }
-                }
-            }
         })
         return obj
     }

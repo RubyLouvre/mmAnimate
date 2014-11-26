@@ -297,8 +297,7 @@ define(["avalon"], function() {
                     timeline[index] = neo
                     neo.troops = frame.troops
                 } else {
-                    delete frame.startTime
-                    frame.gotoEnd = false
+                    frame.startTime = frame.gotoEnd = false
                     if (frame.revert)  //如果设置了倒带
                         frame.revertTweens()
                 }
@@ -375,10 +374,10 @@ define(["avalon"], function() {
         this.elem = elem
         this.troops = []
         this.tweens = []
-        this.orig = []
+        this.orig = {}
         this.props = {}
-        this.dataShow = {}
         this.count = 1
+        this.frameName = "fx" + (new Date - 0)
         this.playState = true //是否能更新
     }
     var root = document.documentElement
@@ -719,14 +718,6 @@ define(["avalon"], function() {
         var obj = {}
         fxAttrs.concat.apply([], fxAttrs.slice(0, num)).forEach(function(name) {
             obj[name] = type
-            if (~name.indexOf("margin")) {
-                Tween.propHooks[name] = {
-                    get: Tween.propHooks._default.get,
-                    set: function(tween) {
-                        tween.elem.style[tween.name] = Math.max(tween.now, 0) + tween.unit
-                    }
-                }
-            }
         })
         return obj
     }
