@@ -267,6 +267,9 @@ define(["avalon"], function() {
         if (!frame.startTime) { //第一帧
             if (frame.playState) {
                 frame.fire("before")//动画开始前做些预操作
+                if(avalon.css(frame.elem, "display") === "none" && !frame.elem.dataShow){
+                    frame.build()
+                }
                 frame.createTweens()
                 frame.build()//如果是先hide再show,那么执行createTweens后再执行build则更为平滑
             }
