@@ -14,6 +14,9 @@ define(["avalon"], function() {
     /*********************************************************************
      *                      主函数                                   *
      **********************************************************************/
+    if (window.MozCSSKeyframeRule || window.WebKitCSSKeyframeRule || window.CSSKeyframeRule) {
+        avalon.error("当前浏览器不支持CSS3 keyframe动画")
+    }
     var effect = avalon.fn.animate = function(properties, options) {
         var frame = new Frame(this[0])
         if (typeof properties === "number") { //如果第一个为数字
@@ -135,6 +138,8 @@ define(["avalon"], function() {
     avalon.easing = {//缓动公式
 
     }
+    //keyframe在FF 5就可以使用，16转正；
+
     /*********************************************************************
      *                      定时器                                  *
      **********************************************************************/
@@ -240,12 +245,15 @@ define(["avalon"], function() {
             if (end || frame.count === 0) { //最后一帧
                 frame.count--
                 frame.fire("after") //动画结束后执行的一些收尾工作
-                var style = frame.elem.style
+                var elem = frame.elem
+                var inline = elem.style
+                var computed = window.getComputedStyle(elem, null);
                 frame.tweens.forEach(function(el) {
-                    if (el.prop in style) {
-                        style[el.prop] = el.end + el.unit
+                    var name = el.prop
+                    if (name in inline) {//保留动画成果
+                        inline[name] = computed[name]
                     } else {
-                        frame.elem[el.prop] = el.end
+                        elem[name] = el.end
                     }
                 })
                 if (frame.count <= 0) {
