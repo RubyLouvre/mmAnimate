@@ -33,7 +33,6 @@ define(["avalon"], function() {
         }
         addOptions.apply(frame, arguments)//处理第二,第三...参数
         //将关键帧插入到时间轴中或插到已有的某一帧的子列队,等此帧完毕,让它再进入时间轴
-        console.log(frame)
         insertFrame(frame)
         return this
     }
@@ -53,7 +52,6 @@ define(["avalon"], function() {
         return +s === s >>> 0;
     }
     function addOption(frame, p, name) {
-        console.log(p)
         if (p === "slow") {
             frame.duration = 600
         } else if (p === "fast") {
@@ -65,9 +63,12 @@ define(["avalon"], function() {
                         addOption(frame, p[i], i)
                     }
                     break
+                case "boolean":
+                    frame.revert = p
+                    break
                 case "number":
                     if (name === "count") {
-                        frame.count  = (p === Infinity || isIndex(p)) ? p : 1
+                        frame.count = (p === Infinity || isIndex(p)) ? p : 1
                     } else {
                         frame.duration = p
                     }
@@ -280,7 +281,6 @@ define(["avalon"], function() {
             }
             if (end) { //最后一帧
                 frame.count--
-                console.log("+++++++++++++")
                 frame.fire("after") //动画结束后执行的一些收尾工作
                 if (frame.count === 0) {
                     frame.fire("complete") //执行用户回调
@@ -291,11 +291,10 @@ define(["avalon"], function() {
                     timeline[index] = neo
                     neo.troops = frame.troops
                 } else {
-                    delete this.startTime
-                    this.gotoEnd = false
-                    console.log("+++++++++++++")
+                    delete frame.startTime
+                    frame.gotoEnd = false
                     if (frame.revert)  //如果设置了倒带
-                        this.revertTweens()
+                        frame.revertTweens()
                 }
             }
         }
@@ -466,6 +465,7 @@ define(["avalon"], function() {
             }
         },
         revertTweens: function() {
+            console.log("++++++++++++++++")
             for (var i = 0, tween; tween = this.tweens[i++]; ) {
                 var start = tween.start
                 var end = tween.end
@@ -475,7 +475,7 @@ define(["avalon"], function() {
                         "rgb(" + tween.start + ")" :
                         (tween.unit ? tween.start + tween.unit : tween.start)
             }
-            this.revert = !this.revert
+            //  this.revert = !this.revert
         }
     }
 
