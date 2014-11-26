@@ -18,7 +18,9 @@
                 avalon.define("fx", function(vm) {
                     vm.start = function() {
                      
-                        box.animate({width: "+=100"}, 2000).animate({height: "+=100"}, 2000)
+                        box.animate({width: "+=100"},  {duration: 2000, count: 3, complete: function(){
+                                avalon.log("完成")
+                        }}).animate({height: "+=100"}, 2000)
                     }
                     vm.reset = function() {
                         box.width(10).height(10)

@@ -285,10 +285,10 @@ define(["avalon"], function() {
                 }
                 frame.fire("step") //每执行一帧调用的回调
             }
-            if (end) { //最后一帧
+            if (end || frame.count == 0) { //最后一帧
                 frame.count--
                 frame.fire("after") //动画结束后执行的一些收尾工作
-                if (frame.count === 0) {
+                if (frame.count <= 0) {
                     frame.fire("complete") //执行用户回调
                     var neo = frame.troops.shift()
                     if (!neo) {
@@ -448,7 +448,6 @@ define(["avalon"], function() {
                     style.overflow = frame.overflow[ 0 ]
                     style.overflowX = frame.overflow[ 1 ]
                     style.overflowY = frame.overflow[ 2 ]
-                    frame.overflow = null
                 })
             }
 
@@ -682,6 +681,7 @@ define(["avalon"], function() {
             for (var i = 0, frame; frame = timeline[i]; i++) {
                 if (frame.elem === node) {
                     frame.gotoEnd = true
+                    frame.count = 0
                     switch (stopCode) { //如果此时调用了stop方法
                         case 0:
                             // false false 中断当前动画，继续下一个动画
