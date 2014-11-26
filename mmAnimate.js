@@ -339,9 +339,14 @@ define(["avalon"], function() {
      <td>orig</td><td>Object</td><td>{}</td><td>保存动画之前的样式，用于在隐藏后还原</td>
      </tr>
      <tr>
-     <td>dataShow</td><td>Object</td><td>{}</td><td>保存元素在显示时的各种尺寸，用于在显示前还原</td>
+     <td>playState</td><td>Boolean</td><td>true</td><td>是否能进行动画，比如暂停了此值就为false</td>
      </tr>
-     
+     <tr>
+     <td>frameName</td><td>String</td><td>"fx"+ Date.now()</td><td>当前动画的名字</td>
+     </tr>
+     <tr>
+     <td>count</td><td>Number</td><td>1</td><td>能重复多少次</td>
+     </tr>
      <tr>
      <td>bind(type, fn, unshift)</td><td></td><td></td><td>
      <table border="1">

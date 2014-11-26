@@ -600,7 +600,7 @@ define(["avalon"], function() {
             for (var i = 0, frame; frame = timeline[i]; i++) {
                 if (frame.elem === elem) {
                     frame.startTime += (now - frame.paused)
-                    delete frame.paused
+                    frame.play()
                 }
             }
             return this
