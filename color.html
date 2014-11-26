@@ -11,7 +11,7 @@
                 }
                 avalon.define("fx", function(vm) {
                     vm.effect = function() {
-                        avalon(this).fx({background: getRandomColor()}, 1000)
+                        avalon(this).animate({backgroundColor: getRandomColor()}, 1000)
                     }
 
                 })
@@ -39,7 +39,7 @@
                 }
                 avalon.define("fx", function(vm) {
                     vm.effect = function() {
-                        avalon(this).fx({background: getRandomColor()}, 1000)
+                        avalon(this).animate({background: getRandomColor()}, 1000)
                     }
 
                 })

@@ -255,7 +255,7 @@ define(["avalon"], function() {
         //并在动画结束后，从子列队选取下一个动画实例取替自身
         var now = +new Date
         if (!frame.startTime) { //第一帧
-            if (frame.update) {
+            if (frame.playState) {
                 frame.fire("before")//动画开始前做些预操作
                 frame.createTweens()
                 frame.build()//如果是先hide再show,那么执行createTweens后再执行build则更为平滑
@@ -264,26 +264,28 @@ define(["avalon"], function() {
         } else { //中间自动生成的补间
             var per = (now - frame.startTime) / frame.duration
             var end = frame.gotoEnd || per >= 1 //gotoEnd可以被外面的stop方法操控,强制中止
-            if (frame.update) {
+            if (frame.playState) {
                 for (var i = 0, tween; tween = frame.tweens[i++]; ) {
                     tween.run(per, end)
                 }
                 frame.fire("step") //每执行一帧调用的回调
             }
             if (end) { //最后一帧
+                frame.count--
                 frame.fire("after") //动画结束后执行的一些收尾工作
-                frame.fire("complete") //执行用户回调
-                if (frame.revert) { //如果设置了倒带
-                    this.revertTweens()
-                    delete this.startTime
-                    this.gotoEnd = false
-                } else {
+                if (frame.count === 0) {
+                    frame.fire("complete") //执行用户回调
                     var neo = frame.troops.shift()
                     if (!neo) {
                         return false
                     } //如果存在排队的动画,让它继续
                     timeline[index] = neo
                     neo.troops = frame.troops
+                } else {
+                    delete this.startTime
+                    this.gotoEnd = false
+                    if (frame.revert)  //如果设置了倒带
+                        this.revertTweens()
                 }
             }
         }
@@ -361,7 +363,8 @@ define(["avalon"], function() {
         this.orig = []
         this.props = {}
         this.dataShow = {}
-        this.update = true //是否能更新
+        this.count = 1
+        this.playState = true //是否能更新
     }
     var root = document.documentElement
 
@@ -474,7 +477,7 @@ define(["avalon"], function() {
         var tween = new Tween(name, frame)
         var from = dataShow[name] || tween.cur() //取得起始值
         var to
-        if (/color$/.test(name)) {
+        if (/color$/i.test(name)) {
             //用于分解属性包中的样式或属性,变成可以计算的因子
             parts = [color2array(from), color2array(value)]
         } else {
@@ -520,7 +523,7 @@ define(["avalon"], function() {
         if (from + "" !== to + "") { //不处理起止值都一样的样式与属性
             tween.start = from
             tween.end = to
-            tween.unit = unit
+            tween.unit = unit || ""
             frame.tweens.push(tween)
         } else {
             delete frame.props[name]
@@ -647,17 +650,17 @@ define(["avalon"], function() {
         resume: function() {
             var now = new Date
             var elem = this[0]
-            for (var i = 0, fx; fx = timeline[i]; i++) {
-                if (fx.elem === elem) {
-                    fx.startTime += (now - fx.paused)
-                    delete fx.paused
+            for (var i = 0, frame; frame = timeline[i]; i++) {
+                if (frame.elem === elem) {
+                    frame.startTime += (now - frame.paused)
+                    delete frame.paused
                 }
             }
             return this
         },
         //如果clearQueue为true，是否清空列队
         //如果gotoEnd 为true，是否跳到此动画最后一帧
-        stop: function(clearQueue, gotoEnd) { 
+        stop: function(clearQueue, gotoEnd) {
             clearQueue = clearQueue ? "1" : ""
             gotoEnd = gotoEnd ? "1" : "0"
             var stopCode = parseInt(clearQueue + gotoEnd, 2) //返回0 1 2 3
@@ -668,7 +671,7 @@ define(["avalon"], function() {
                     switch (stopCode) { //如果此时调用了stop方法
                         case 0:
                             // false false 中断当前动画，继续下一个动画
-                            frame.update = frame.revert = false
+                            frame.playState = frame.revert = false
                             break
                         case 1:
                             // false true立即跳到最后一帧，继续下一个动画
