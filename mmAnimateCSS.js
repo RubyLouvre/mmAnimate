@@ -294,13 +294,13 @@ define(["avalon"], function() {
         var array = avalon.slice(arguments, 1);
         return str.replace(rformat, function(match, name) {
             if (match.charAt(0) === "\\")
-                return match.slice(1);
-            var index = Number(name);
+                return match.slice(1)
+            var index = Number(name)
             if (index >= 0)
-                return array[index];
+                return array[index]
             if (object && object[name] !== void 0)
-                return object[name];
-            return ''
+                return object[name]
+            return ""
         })
     }
 
@@ -312,9 +312,9 @@ define(["avalon"], function() {
         }
         //动态插入一条样式规则
         try {
-            var sheet = styleElement.sheet;// styleElement.styleSheet;
-            var cssRules = sheet.cssRules; // sheet.rules;
-            sheet.insertRule(rule, cssRules.length);
+            var sheet = styleElement.sheet// styleElement.styleSheet;
+            var cssRules = sheet.cssRules // sheet.rules;
+            sheet.insertRule(rule, cssRules.length)
         } catch (e) {
         }
     }
@@ -333,7 +333,7 @@ define(["avalon"], function() {
         this.playState = true //是否能更新
     }
     Frame.$name = avalon.cssName("animation")
-    Frame.$direction = avalon.cssName("animation-direction")
+    Frame.$duration = avalon.cssName("animation-direction")
     Frame.$FillMode = avalon.cssName("animation-fill-mode")
     Frame.$easing = avalon.cssName("animation-timing-function")
 
@@ -440,12 +440,10 @@ define(["avalon"], function() {
             var elem = this.elem
             var style = elem.style
             style[ Frame.$name] = this.frameName
-            style[Frame.$direction] = ""
+            style[Frame.$duration] = this.duration + "ms"
             style[Frame.$fillMode] = this.frameName === "hide" || this.frameName === "slideUp" ? "backwards" : "forwards";
-            style[Frame.$easing] = ""
+            style[Frame.$easing] = "cubic-bezier( " + bezier[this.easing] + " )"
             style[Frame.$count] = "1"
-
-
 
         },
         revertTweens: function() {

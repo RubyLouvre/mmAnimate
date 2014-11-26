@@ -749,6 +749,7 @@ define(["avalon"], function() {
 
     avalon.each(effects, function(method, props) {
         avalon.fn[method] = function() {
+            props.frameName = method
             var args = [].concat.apply([props], arguments)
             return this.animate.apply(this, args)
         }
@@ -757,6 +758,7 @@ define(["avalon"], function() {
     String("toggle,show,hide").replace(avalon.rword, function(name) {
         avalon.fn[name] = function() {
             var args = [].concat.apply([genFx(name, 3)], arguments)
+            args[0].frameName = name
             return this.animate.apply(this, args)
         }
     })
