@@ -20,10 +20,11 @@
         </style>
         <script src="avalon.js"></script>
         <script>
-            require("mmAnimate", function(avalon) {
+            require("mmAnimateCSS", function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.effect1 = function() {
-                        avalon(document.getElementById("effect1")).hide(1000).delay(2000).show(1500)
+                        //  avalon(document.getElementById("effect1")).hide(1000).delay(2000).show(1500)
+                        avalon(document.getElementById("effect1")).animate({width: 400}, 1000)
                     }
                     vm.effect2 = function() {
                         avalon(document.getElementById("effect2")).show(1000, {

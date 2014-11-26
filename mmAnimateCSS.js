@@ -44,9 +44,10 @@ define(["avalon"], function() {
             addOption(this, arguments[i])
         }
         this.queue = !!(this.queue == null || this.queue) //是否插入子列队
-        this.easing = avalon.easing[this.easing] ? this.easing : "swing"//缓动公式的名字
+        this.easing = bezier[this.easing] ? this.easing : "linear"//缓动公式的名字
         this.count = (this.count === Infinity || isIndex(this.count)) ? this.count : 1
         this.gotoEnd = false//是否立即跑到最后一帧
+        this.frameName = this.frameName || "fx" + Date.now()
         var duration = this.duration
         this.duration = typeof duration === "number" ? duration : /^\d+ms$/.test(duration) ? parseFloat(duration) :
                 /^\d+s$/.test(duration) ? parseFloat(duration) * 1000 : 400 //动画时长
@@ -154,25 +155,7 @@ define(["avalon"], function() {
                 stop: (window.webkitCancelAnimationFrame || window.webkitCancelRequestAnimationFrame).bind(window)
             }
         } else {
-            var timeLast = 0
-            // http://jsperf.com/date-now-vs-date-gettime/11
-            var now = Date.now || function() {
-                return (new Date).getTime()
-            }
-            return {
-                start: function(callback) {//主要用于IE，必须千方百计要提高性能
-                    var timeCurrent = now()
-                    // http://jsperf.com/math-max-vs-comparison/3
-                    var timeDelta = 16 - (timeCurrent - timeLast)
-                    if (timeDelta < 0)
-                        timeDelta = 0
-                    timeLast = timeCurrent + timeDelta
-                    return setTimeout(callback, timeDelta)
-                },
-                stop: function(id) {
-                    clearTimeout(id)
-                }
-            };
+            //当你使用此模块时,你就不需要兼容旧式IE
         }
     }
     var Timer = new AnimationTimer()
@@ -318,6 +301,24 @@ define(["avalon"], function() {
         } catch (e) {
         }
     }
+    function deleteCSSRule(ruleName, keyframes) {
+        //删除一条样式规则
+        var prop = keyframes ? "name" : "selectorText";
+        var name = keyframes ? "@keyframes " : "cssRule ";//调试用
+        if (styleElement) {
+            var sheet = styleElement.sheet;// styleElement.styleSheet;
+            var cssRules = sheet.cssRules;// sheet.rules;
+            for (var i = 0, n = cssRules.length; i < n; i++) {
+                var rule = cssRules[i];
+                if (rule[prop] === ruleName) {
+                    sheet.deleteRule(i);
+                    //    avalon.log("已经成功删除" + name + " " + ruleName);
+                    break;
+                }
+            }
+        }
+    }
+
     /*********************************************************************
      *                                  逐帧动画                            *
      **********************************************************************/
@@ -332,10 +333,7 @@ define(["avalon"], function() {
         this.count = 1
         this.playState = true //是否能更新
     }
-    Frame.$name = avalon.cssName("animation")
-    Frame.$duration = avalon.cssName("animation-direction")
-    Frame.$FillMode = avalon.cssName("animation-fill-mode")
-    Frame.$easing = avalon.cssName("animation-timing-function")
+
 
     Frame.prototype = {
         constructor: Frame,
@@ -420,6 +418,12 @@ define(["avalon"], function() {
             }
 
         },
+        deleteKeyFrame: function() {
+            //删除一条@keyframes样式规则
+            if (!effect.effects[this.frameName]) {
+                deleteCSSRule(this.frameName, true)
+            }
+        },
         insertKeyFrame: function() {
             var from = []
             var to = []
@@ -427,29 +431,144 @@ define(["avalon"], function() {
                 from.push(dasherize(el.prop) + ":" + el.start + el.unit)
                 to.push(dasherize(el.prop) + ":" + el.end + el.unit)
             })
-
             //CSSKeyframesRule的模板
             var frameRule = "@#{prefix}keyframes #{frameName}{ 0%{ #{from} } 100%{  #{to} }  }";
-            var rule2 = format(frameRule, {
+            var anmationRule = "#{frameName} #{duration}ms cubic-bezier(#{easing})  0s 1 normal #{model} running";
+            var rule1 = format(frameRule, {
                 frameName: this.frameName,
                 prefix: prefixCSS,
                 from: from.join(";"),
                 to: to.join(";")
             })
-            insertCSSRule(rule2)
+
+            var rule2 = format(anmationRule, {
+                frameName: this.frameName,
+                duration: this.duration,
+                model: (this.frameName === "hide" || this.frameName === "slideUp") ? "backwards" : "forwards",
+                easing: bezier[this.easing]
+            })
+            insertCSSRule(rule1)
             var elem = this.elem
             var style = elem.style
-            style[ Frame.$name] = this.frameName
-            style[Frame.$duration] = this.duration + "ms"
-            style[Frame.$fillMode] = this.frameName === "hide" || this.frameName === "slideUp" ? "backwards" : "forwards";
-            style[Frame.$easing] = "cubic-bezier( " + bezier[this.easing] + " )"
-            style[Frame.$count] = "1"
+
+            style[avalon.cssName("animation")] = rule2
+
 
         },
         revertTweens: function() {
 
         }
     }
+    var rfxnum = new RegExp("^(?:([+-])=|)(" + (/[+-]?(?:\d*\.|)\d+(?:[eE][+-]?\d+|)/).source + ")([a-z%]*)$", "i")
+    effect.effects = avalon.oneObject("show,hide,toggle,slideUp,slide,slideDown,slideUp,slideToggle,fadeIn,fadeOut, fadeToggle")
 
 
-})()
+    function createTweenImpl(frame, name, value, hidden) {
+        var elem = frame.elem
+        var dataShow = elem.dataShow || {}
+        var tween = new Tween(name, frame)
+        var from = dataShow[name] || tween.cur() //取得起始值
+        var to
+        if (/color$/i.test(name)) {
+            //用于分解属性包中的样式或属性,变成可以计算的因子
+            parts = [color2array(from), color2array(value)]
+        } else {
+            parts = rfxnum.exec(from)
+            var unit = parts && parts[ 3 ] || (avalon.cssNumber[ name ] ? "" : "px")
+            //处理 toggle, show, hide
+            if (value === "toggle") {
+                value = hidden ? "show" : "hide"
+            }
+            if (value === "show") {
+                frame.showState = "show"
+                avalon.css(elem, name, 0);
+                parts = [0, parseFloat(from)]
+            } else if (value === "hide") {
+                frame.showState = "hide"
+                frame.orig[name] = from
+                parts = [parseFloat(from), 0]
+                value = 0;
+            } else {// "18em"  "+=18em"
+                parts = rfxnum.exec(value)//["+=18em", "+=", "18", "em"]
+                if (parts) {
+                    parts[2] = parseFloat(parts[2]) //18
+                    if (parts[3] && parts[ 3 ] !== unit) {//如果存在单位，并且与之前的不一样，需要转换
+                        var clone = elem.cloneNode(true)
+                        clone.style.visibility = "hidden"
+                        clone.style.position = "absolute"
+                        elem.parentNode.appendChild(clone)
+                        avalon.css(clone, name, parts[2] + (parts[3] ? parts[3] : 0))
+                        parts[ 2 ] = parseFloat(avalon.css(clone, name))
+                        elem.parentNode.removeChild(clone)
+                    }
+                    to = parts[2]
+                    from = parseFloat(from)
+                    if (parts[ 1 ]) {
+                        to = from + (parts[ 1 ] + 1) * parts[ 2 ]
+                    }
+                    parts = [from, to]
+                }
+            }
+        }
+        from = parts[0]
+        to = parts[1]
+        if (from + "" !== to + "") { //不处理起止值都一样的样式与属性
+            tween.start = from
+            tween.end = to
+            tween.unit = unit || ""
+            frame.tweens.push(tween)
+        } else {
+            delete frame.props[name]
+        }
+    }
+    function Tween(prop, options) {
+        this.elem = options.elem
+        this.prop = prop
+        this.easing = avalon.easing[options.easing]
+
+    }
+
+    Tween.prototype = {
+        constructor: Tween,
+        cur: function() {//取得当前值
+            var hooks = Tween.propHooks[ this.prop ]
+            return hooks && hooks.get ?
+                    hooks.get(this) :
+                    Tween.propHooks._default.get(this)
+        },
+        run: function(per, end) {//更新元素的某一样式或属性
+            this.update(per, end)
+            var hook = Tween.propHooks[ this.prop ]
+            if (hook && hook.set) {
+                hook.set(this);
+            }
+        },
+        update: function(per, end) {
+            this.now = (end ? this.end : this.start + this.easing(per) * (this.end - this.start))
+        }
+    }
+
+    Tween.propHooks = {
+        //只处理scrollTop, scrollLeft
+        _default: {
+            get: function(tween) {
+                var result = avalon.css(tween.elem, tween.prop)
+                return !result || result === "auto" ? 0 : result
+            },
+            set: function(tween) {
+                avalon.css(tween.elem, tween.prop, tween.now + tween.unit)
+            }
+        }
+    }
+    avalon.each(["scrollTop", "scollLeft"], function(name) {
+        Tween.propHooks[name] = {
+            get: function(tween) {
+                return tween.elem[tween.name]
+            },
+            set: function(tween) {
+                tween.elem[tween.name] = tween.now
+            }
+        }
+    })
+    return avalon
+})
