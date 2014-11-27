@@ -449,15 +449,11 @@ define(["avalon"], function() {
             frame.bind("after", function() {
                 if (frame.showState === "hide") {
                     this.style.display = "none"
-                    //   this.style[$playState] = "paused";
                     this.dataShow = {}
-                    // var oldVisible = style.visibility
-                    //  this.style.visibility = "hidden"
                     for (var i in frame.orig) { //还原为初始状态
                         this.dataShow[i] = frame.orig[i]
                         avalon.css(this, i, frame.orig[i])
                     }
-                    //  style.visibility = oldVisible
                 } else {
                     var elem = this
                     var inline = elem.style
@@ -567,8 +563,6 @@ define(["avalon"], function() {
                 }
             }
         }
-        console.log(parts)
-        console.log(name)
         from = parts[0]
         to = parts[1]
         if (from + "" !== to + "") { //不处理起止值都一样的样式与属性

@@ -2,14 +2,14 @@
 <html>
     <head>
         <meta charset="utf-8" />      
-        <title>avalon.fn.slideDown</title>
+        <title>avalon.fn.slideToggle</title>
         <script src="avalon.js"></script>
         <script>
             require("mmAnimate.modern", function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.effect = function() {
                         for (var i = 0, el; el = this.children[i++]; ) {
-                            avalon(el).slideToggle(1000)
+                            avalon(el).slideToggle(1000)//先显示出来
                         }
                     }
                 })
@@ -28,7 +28,7 @@
         </head>
         <body>
             <article>
-                <h3>avalon.fn.slideDown(duration, props)</h3>
+                <h3>avalon.fn.slideToggle(duration, props)</h3>
                 <p><span class="stress">描述：</span></p>
             <p>让匹配的每个节点进行下滑或收起动画。</p>
             <p><span class="stress">参数：</span></p>
@@ -51,7 +51,7 @@
                 avalon.define("fx", function(vm) {
                     vm.effect = function() {
                         for (var i = 0, el; el = this.children[i++]; ) {
-                            avalon(el).slideToggle(1000)
+                            avalon(el).slideToggle(1000) //先显示出来
                         }
                     }
                 })
