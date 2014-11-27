@@ -28,10 +28,6 @@ define(["avalon"], function() {
             }
         } else if (typeof properties === "object") {
             for (var name in properties) {//处理第一个参数
-                if (name === "frameName") {
-                    frame.frameName = properties.frameName
-                    continue
-                }
                 var p = avalon.cssName(name) || name
                 if (name !== p) {
                     properties[p] = properties[name] //转换为驼峰风格borderTopWidth, styleFloat
@@ -203,6 +199,7 @@ define(["avalon"], function() {
      */
     var timeline = avalon.timeline = []
     function insertFrame(frame) { //插入关键帧
+
         if (frame.queue) { //如果插入到已有的某一帧的子列队
             var gotoQueue = 1
             for (var i = timeline.length, el; el = timeline[--i]; ) {
@@ -275,15 +272,6 @@ define(["avalon"], function() {
             if (end || frame.count === 0) { //最后一帧
                 frame.count--
                 frame.fire("after") //动画结束后执行的一些收尾工作
-                var elem = frame.elem
-                var inline = elem.style
-                var computed = window.getComputedStyle(elem, null);
-                frame.tweens.forEach(function(el) {
-                    var name = el.name
-                    if (name in inline) {//保留动画成果
-                        inline[name] = computed[name]
-                    }
-                })
                 if (frame.count <= 0) {
                     frame.deleteKeyFrame()
                     frame.fire("complete") //执行用户回调
@@ -295,6 +283,9 @@ define(["avalon"], function() {
                     neo.troops = frame.troops
                 } else {
                     frame.startTime = frame.gotoEnd = false
+                    if (!effect.effects[frame.frameName]) {
+                        frame.frameName = "fx" + Date.now()
+                    }
                     if (frame.revert)  //如果设置了倒带
                         frame.revertTweens()
                 }
@@ -335,36 +326,45 @@ define(["avalon"], function() {
         })
     }
 
-    var styleElement;
 
-    function insertCSSRule(rule) {
+
+
+    var styleElement
+    function eachCSSRule(ruleName, callback, keyframes) {
         if (!styleElement) {
             styleElement = document.getElementById("avalonStyle")
         }
-        //动态插入一条样式规则
-        try {
-            var sheet = styleElement.sheet// styleElement.styleSheet;
-            var cssRules = sheet.cssRules // sheet.rules;
-            sheet.insertRule(rule, cssRules.length)
-        } catch (e) {
-        }
-    }
-    function deleteCSSRule(ruleName, keyframes) {
-        //删除一条样式规则
         var prop = keyframes ? "name" : "selectorText";
         var name = keyframes ? "@keyframes " : "cssRule ";//调试用
-        if (styleElement) {
-            var sheet = styleElement.sheet;// styleElement.styleSheet;
-            var cssRules = sheet.cssRules;// sheet.rules;
-            for (var i = 0, n = cssRules.length; i < n; i++) {
-                var rule = cssRules[i];
-                if (rule[prop] === ruleName) {
-                    sheet.deleteRule(i);
-                    avalon.log("已经成功删除" + name + " " + ruleName);
-                    break;
-                }
+        //动态插入一条样式规则
+        var sheet = styleElement.sheet// styleElement.styleSheet;
+        var cssRules = sheet.cssRules // sheet.rules;
+        var pos = -1
+        for (var i = 0, n = cssRules.length; i < n; i++) {
+            var rule = cssRules[i];
+            if (rule[prop] === ruleName) {
+                pos = i
+                break;
             }
         }
+        //如果想插入一条样式规则,  sheet.insertRule(rule, cssRules.length)
+        //如果想删除一条样式规则, sheet.deleteRule(i);
+        callback.call(sheet, pos, n)
+    }
+    function insertKeyframe(ruleName, rule) {
+        eachCSSRule(ruleName, function(pos, end) {
+            if (pos === -1) {
+                this.insertRule(rule, end)
+            }
+        }, true)
+    }
+
+    function deleteKeyframe(ruleName) {
+        eachCSSRule(ruleName, function(pos) {
+            if (pos !== -1) {
+                this.deleteRule(pos)
+            }
+        }, true)
     }
 
     /*********************************************************************
@@ -449,26 +449,40 @@ define(["avalon"], function() {
             frame.bind("after", function() {
                 if (frame.showState === "hide") {
                     this.style.display = "none"
+                    //   this.style[$playState] = "paused";
                     this.dataShow = {}
+                    // var oldVisible = style.visibility
+                    //  this.style.visibility = "hidden"
                     for (var i in frame.orig) { //还原为初始状态
                         this.dataShow[i] = frame.orig[i]
                         avalon.css(this, i, frame.orig[i])
                     }
+                    //  style.visibility = oldVisible
+                } else {
+                    var elem = this
+                    var inline = elem.style
+                    var computed = window.getComputedStyle(elem, null);
+                    frame.tweens.forEach(function(el) {
+                        var name = el.name
+                        if (name in inline) {//保留动画成果
+                            inline[name] = computed[name]
+                        }
+                    })
                 }
             })
             this.build = avalon.noop //让其无效化
         },
         createTweens: function() {
             var hidden = avalon.isHidden(this.elem)
+            this.tweens = []
             for (var i in this.props) {
                 createTweenImpl(this, i, this.props[i], hidden)
             }
-
         },
         deleteKeyFrame: function() {
             //删除一条@keyframes样式规则
             if (!effect.effects[this.frameName]) {
-                deleteCSSRule(this.frameName, true)
+                deleteKeyframe(this.frameName)
             }
         },
         insertKeyFrame: function() {
@@ -478,8 +492,10 @@ define(["avalon"], function() {
                 from.push(dasherize(el.name) + ":" + el.start + el.unit)
                 to.push(dasherize(el.name) + ":" + el.end + el.unit)
             })
+
             //CSSKeyframesRule的模板
             var frameRule = "@#{prefix}keyframes #{frameName}{ 0%{ #{from} } 100%{  #{to} }  }";
+
             var anmationRule = "#{frameName} #{duration}ms cubic-bezier(#{easing}) 0s 1 normal #{model} running";
             var rule1 = format(frameRule, {
                 frameName: this.frameName,
@@ -487,20 +503,15 @@ define(["avalon"], function() {
                 from: from.join(";"),
                 to: to.join(";")
             })
-
+            insertKeyframe(this.frameName, rule1)
             var rule2 = format(anmationRule, {
                 frameName: this.frameName,
                 duration: this.duration,
-                model: (this.showState === "hide") ? "backwards" : "forwards",
+                model: "forwards", //(this.showState === "hide") ? "backwards" : "forwards",
                 easing: bezier[this.easing]
             })
-            insertCSSRule(rule1)
             var elem = this.elem
-            var style = elem.style
-
-            style[avalon.cssName("animation")] = rule2
-
-
+            elem.style[avalon.cssName("animation")] = rule2
         },
         revertTweens: function() {
 
@@ -508,7 +519,6 @@ define(["avalon"], function() {
     }
     var rfxnum = new RegExp("^(?:([+-])=|)(" + (/[+-]?(?:\d*\.|)\d+(?:[eE][+-]?\d+|)/).source + ")([a-z%]*)$", "i")
     effect.effects = avalon.oneObject("show,hide,toggle,slideUp,slide,slideDown,slideUp,slideToggle,fadeIn,fadeOut, fadeToggle")
-
 
     function createTweenImpl(frame, name, value, hidden) {
         var elem = frame.elem
@@ -557,6 +567,8 @@ define(["avalon"], function() {
                 }
             }
         }
+        console.log(parts)
+        console.log(name)
         from = parts[0]
         to = parts[1]
         if (from + "" !== to + "") { //不处理起止值都一样的样式与属性
@@ -719,16 +731,14 @@ define(["avalon"], function() {
 
     avalon.each(effects, function(method, props) {
         avalon.fn[method] = function() {
-            props.frameName = method
-            var args = [].concat.apply([props], arguments)
+            var args = [].concat.apply([props, {frameName: method}], arguments)
             return this.animate.apply(this, args)
         }
     })
 
     String("toggle,show,hide").replace(avalon.rword, function(name) {
         avalon.fn[name] = function() {
-            var args = [].concat.apply([genFx(name, 3)], arguments)
-            args[0].frameName = name
+            var args = [].concat.apply([genFx(name, 3), {frameName: name}], arguments)
             return this.animate.apply(this, args)
         }
     })

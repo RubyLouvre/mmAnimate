@@ -464,6 +464,7 @@ define(["avalon"], function() {
             this.build = avalon.noop //让其无效化
         },
         createTweens: function() {
+            this.tweens = []
             var hidden = avalon.isHidden(this.elem)
             for (var i in this.props) {
                 createTweenImpl(this, i, this.props[i], hidden)
@@ -742,16 +743,14 @@ define(["avalon"], function() {
 
     avalon.each(effects, function(method, props) {
         avalon.fn[method] = function() {
-            props.frameName = method
-            var args = [].concat.apply([props], arguments)
+            var args = [].concat.apply([props,{frameName: method}], arguments)
             return this.animate.apply(this, args)
         }
     })
 
     String("toggle,show,hide").replace(avalon.rword, function(name) {
         avalon.fn[name] = function() {
-            var args = [].concat.apply([genFx(name, 3)], arguments)
-            args[0].frameName = name
+            var args = [].concat.apply([genFx(name, 3), {frameName: name}], arguments)
             return this.animate.apply(this, args)
         }
     })

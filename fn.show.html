@@ -13,8 +13,9 @@
                             if (avalon.isHidden(el)) {
                                 avalon(el).show(1500);
                             } else {
-                                avalon(el).show(1000);
+                                avalon(el).hide(1500);
                             }
+
                         }
                     }
                 })
@@ -57,10 +58,10 @@
                     vm.array = ["a", "b", "c", "d", "e"]
                     vm.effect = function() {
                         for (var i = 0, el; el = this.children[i++]; ) {
-                            if (avalon.isHidden(el)) {
+                             if (avalon.isHidden(el)) {
                                 avalon(el).show(1500);
                             } else {
-                                avalon(el).show(1000);
+                                avalon(el).hide(1500);
                             }
                         }
                     }
