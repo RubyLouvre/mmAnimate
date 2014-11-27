@@ -564,7 +564,7 @@ define(["avalon"], function() {
      <td>elem</td><td>Element</td><td></td><td>元素节点</td>
      </tr>
      <tr>
-     <td>prop</td><td>String</td><td>""</td><td>属性名或样式名，以驼峰风格存在</td>
+     <td>name</td><td>String</td><td>""</td><td>属性名或样式名，以驼峰风格存在</td>
      </tr>
      <tr>
      <td>start</td><td>Number</td><td>0</td><td>渐变的开始值</td>
@@ -585,7 +585,7 @@ define(["avalon"], function() {
      */
     function Tween(prop, options) {
         this.elem = options.elem
-        this.prop = prop
+        this.name = prop
         this.easing = avalon.easing[options.easing]
         if (/color$/i.test(prop)) {
             this.update = this.updateColor
@@ -595,14 +595,14 @@ define(["avalon"], function() {
     Tween.prototype = {
         constructor: Tween,
         cur: function() {//取得当前值
-            var hooks = Tween.propHooks[ this.prop ]
-            return hooks && hooks.get ?
-                    hooks.get(this) :
+            var hook = Tween.propHooks[ this.name ]
+            return hook && hook.get ?
+                    hook.get(this) :
                     Tween.propHooks._default.get(this)
         },
         run: function(per, end) {//更新元素的某一样式或属性
             this.update(per, end)
-            var hook = Tween.propHooks[ this.prop ]
+            var hook = Tween.propHooks[ this.name ]
             if (hook && hook.set) {
                 hook.set(this);
             } else {
@@ -628,16 +628,17 @@ define(["avalon"], function() {
     Tween.propHooks = {
         _default: {
             get: function(tween) {
-                var result = avalon.css(tween.elem, tween.prop)
+                var result = avalon.css(tween.elem, tween.name)
                 return !result || result === "auto" ? 0 : result
             },
             set: function(tween) {
-                avalon.css(tween.elem, tween.prop, tween.now + tween.unit)
+                avalon.css(tween.elem, tween.name, tween.now + tween.unit)
             }
         }
     }
 
-    avalon.each(["scrollTop", "scollLeft"], function(name) {
+    ;
+    ["scrollTop", "scollLeft"].forEach(function(name) {
         Tween.propHooks[name] = {
             get: function(tween) {
                 return tween.elem[tween.name]

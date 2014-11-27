@@ -9,7 +9,7 @@
                 avalon.define("fx", function(vm) {
                     vm.array = avalon.range(0, 1000)
                     vm.effect = function() {
-                        avalon(this).fx({scrollTop: "+=150"}, 1000)
+                        avalon(this).animate({scrollTop: "+=3000"}, 1000)
                     }
                 })
                 avalon.scan()
@@ -28,15 +28,15 @@
     </head>
     <body>
         <h3>滚动条动画</h3>
-        <div ms-controller="fx" ms-each="array" ms-click="effect" class="effect">
-            <div>{{el}}</div>
+        <div ms-controller="fx"ms-click="effect" class="effect">
+            <div  ms-repeat="array" >{{el}}</div>
         </div>
         <pre>
             require("mmAnimate", function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.array = avalon.range(0, 1000)
                     vm.effect = function() {
-                        avalon(this).fx({scrollTop: "+=150"}, 1000)
+                        avalon(this).animate({scrollTop: "+=150"}, 1000)
                     }
                 })
                 avalon.scan()

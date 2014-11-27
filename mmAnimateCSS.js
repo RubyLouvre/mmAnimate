@@ -543,7 +543,7 @@ define(["avalon"], function() {
     }
     function Tween(prop, options) {
         this.elem = options.elem
-        this.prop = prop
+        this.name = prop
         this.easing = avalon.easing[options.easing]
 
     }
@@ -572,11 +572,11 @@ define(["avalon"], function() {
         //只处理scrollTop, scrollLeft
         _default: {
             get: function(tween) {
-                var result = avalon.css(tween.elem, tween.prop)
+                var result = avalon.css(tween.elem, tween.name)
                 return !result || result === "auto" ? 0 : result
             },
             set: function(tween) {
-                avalon.css(tween.elem, tween.prop, tween.now + tween.unit)
+                avalon.css(tween.elem, tween.name, tween.now + tween.unit)
             }
         }
     }
