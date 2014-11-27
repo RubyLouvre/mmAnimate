@@ -14,9 +14,11 @@ define(["avalon"], function() {
     /*********************************************************************
      *                      主函数                                   *
      **********************************************************************/
-    if (window.MozCSSKeyframeRule || window.WebKitCSSKeyframeRule || window.CSSKeyframeRule) {
+    if (!(window.MozCSSKeyframeRule || window.WebKitCSSKeyframeRule || window.CSSKeyframeRule)) {
         avalon.error("当前浏览器不支持CSS3 keyframe动画")
     }
+    //http://stackoverflow.com/questions/6221411/any-perspectives-on-height-auto-for-css3-transitions-and-animations
+    //http://www.cnblogs.com/rubylouvre/archive/2009/09/04/1559557.html
     var effect = avalon.fn.animate = function(properties, options) {
         var frame = new Frame(this[0])
         if (typeof properties === "number") { //如果第一个为数字
@@ -135,11 +137,34 @@ define(["avalon"], function() {
             Math.random().toFixed(3),
             Math.random().toFixed(3)]
     }
-    avalon.easing = {//缓动公式
-
+    //缓动公式
+    avalon.easing = {}
+    avalon.each(bezier, function(key, value) {
+        avalon.easing[key] = bezierToEasing([value[0], value[1]], [value[2], value[3]])
+    })
+    function bezierToEasing(p1, p2) {
+        var A = [null, null], B = [null, null], C = [null, null],
+                derivative = function(t, ax) {
+                    C[ax] = 3 * p1[ax], B[ax] = 3 * (p2[ax] - p1[ax]) - C[ax], A[ax] = 1 - C[ax] - B[ax];
+                    return t * (C[ax] + t * (B[ax] + t * A[ax]));
+                },
+                bezierXY = function(t) {
+                    return C[0] + t * (2 * B[0] + 3 * A[0] * t);
+                },
+                parametric = function(t) {
+                    var x = t, i = 0, z;
+                    while (++i < 14) {
+                        z = derivative(x, 0) - t;
+                        if (Math.abs(z) < 1e-3)
+                            break;
+                        x -= z / bezierXY(x);
+                    }
+                    return x;
+                };
+        return function(t) {
+            return derivative(parametric(t), 1);
+        }
     }
-    //keyframe在FF 5就可以使用，16转正；
-
     /*********************************************************************
      *                      定时器                                  *
      **********************************************************************/
@@ -224,7 +249,6 @@ define(["avalon"], function() {
         //并在动画结束后，从子列队选取下一个动画实例取替自身
         var now = +new Date
         if (!frame.startTime) { //第一帧
-            avalon.log(frame.frameName + "!!!!!!!!")
             if (frame.playState) {
                 frame.fire("before")//动画开始前做些预操作
                 if (avalon.css(frame.elem, "display") === "none" && !frame.elem.dataShow) {
@@ -238,8 +262,13 @@ define(["avalon"], function() {
         } else { //中间自动生成的补间
             var per = (now - frame.startTime) / frame.duration
             var end = frame.gotoEnd || per >= 1 //gotoEnd可以被外面的stop方法操控,强制中止
-            if (frame.playState) {
 
+            if (frame.playState) {
+                for (var i = 0, tween; tween = frame.tweens[i++]; ) {
+                    if (tween.scrollXY) {
+                        tween.run(per, end)
+                    }
+                }
                 frame.fire("step") //每执行一帧调用的回调
             }
             if (end || frame.count === 0) { //最后一帧
@@ -249,11 +278,9 @@ define(["avalon"], function() {
                 var inline = elem.style
                 var computed = window.getComputedStyle(elem, null);
                 frame.tweens.forEach(function(el) {
-                    var name = el.prop
+                    var name = el.name
                     if (name in inline) {//保留动画成果
                         inline[name] = computed[name]
-                    } else {
-                        elem[name] = el.end
                     }
                 })
                 if (frame.count <= 0) {
@@ -378,7 +405,6 @@ define(["avalon"], function() {
             var elem = frame.elem
             var props = frame.props
             var style = elem.style
-            var inlineBlockNeedsLayout = !window.getComputedStyle
             //show 开始时计算其width1 height1 保存原来的width height display改为inline-block或block overflow处理 赋值（width1，height1）
             //hide 保存原来的width height 赋值为(0,0) overflow处理 结束时display改为none;
             //toggle 开始时判定其是否隐藏，使用再决定使用何种策略
@@ -448,8 +474,8 @@ define(["avalon"], function() {
             var from = []
             var to = []
             this.tweens.forEach(function(el) {
-                from.push(dasherize(el.prop) + ":" + el.start + el.unit)
-                to.push(dasherize(el.prop) + ":" + el.end + el.unit)
+                from.push(dasherize(el.name) + ":" + el.start + el.unit)
+                to.push(dasherize(el.name) + ":" + el.end + el.unit)
             })
             //CSSKeyframesRule的模板
             var frameRule = "@#{prefix}keyframes #{frameName}{ 0%{ #{from} } 100%{  #{to} }  }";
@@ -545,22 +571,24 @@ define(["avalon"], function() {
         this.elem = options.elem
         this.name = prop
         this.easing = avalon.easing[options.easing]
-
+        this.scrollXY = prop === "scrollTop" || prop === "scrollLeft"
     }
 
     Tween.prototype = {
         constructor: Tween,
         cur: function() {//取得当前值
-            var hooks = Tween.propHooks[ this.prop ]
-            return hooks && hooks.get ?
-                    hooks.get(this) :
+            var hook = Tween.propHooks[ this.name ]
+            return hook && hook.get ?
+                    hook.get(this) :
                     Tween.propHooks._default.get(this)
         },
         run: function(per, end) {//更新元素的某一样式或属性
             this.update(per, end)
-            var hook = Tween.propHooks[ this.prop ]
+            var hook = Tween.propHooks[ this.name ]
             if (hook && hook.set) {
-                hook.set(this);
+                hook.set(this)
+            } else {
+                Tween.propHooks._default.set(this)
             }
         },
         update: function(per, end) {
@@ -580,7 +608,8 @@ define(["avalon"], function() {
             }
         }
     }
-    avalon.each(["scrollTop", "scollLeft"], function(name) {
+    ;
+    ["scrollTop", "scollLeft"].forEach(function(name) {
         Tween.propHooks[name] = {
             get: function(tween) {
                 return tween.elem[tween.name]

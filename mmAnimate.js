@@ -604,7 +604,7 @@ define(["avalon"], function() {
             this.update(per, end)
             var hook = Tween.propHooks[ this.name ]
             if (hook && hook.set) {
-                hook.set(this);
+                hook.set(this)
             } else {
                 Tween.propHooks._default.set(this)
             }
