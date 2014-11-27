@@ -265,10 +265,11 @@ define(["avalon"], function() {
         if (!frame.startTime) { //第一帧
             if (frame.playState) {
                 frame.fire("before")//动画开始前做些预操作
+                var hidden = avalon.isHidden(this.elem)
                 if (avalon.css(frame.elem, "display") === "none" && !frame.elem.dataShow) {
                     frame.build()
                 }
-                frame.createTweens()
+                frame.createTweens(hidden)
                 frame.build()//如果是先hide再show,那么执行createTweens后再执行build则更为平滑
             }
             frame.startTime = now
@@ -463,9 +464,8 @@ define(["avalon"], function() {
             })
             this.build = avalon.noop //让其无效化
         },
-        createTweens: function() {
+        createTweens: function(hidden) {
             this.tweens = []
-            var hidden = avalon.isHidden(this.elem)
             for (var i in this.props) {
                 createTweenImpl(this, i, this.props[i], hidden)
             }
@@ -743,7 +743,7 @@ define(["avalon"], function() {
 
     avalon.each(effects, function(method, props) {
         avalon.fn[method] = function() {
-            var args = [].concat.apply([props,{frameName: method}], arguments)
+            var args = [].concat.apply([props, {frameName: method}], arguments)
             return this.animate.apply(this, args)
         }
     })

@@ -249,10 +249,11 @@ define(["avalon"], function() {
         if (!frame.startTime) { //第一帧
             if (frame.playState) {
                 frame.fire("before")//动画开始前做些预操作
+                var hidden = avalon.isHidden(frame.elem)
                 if (avalon.css(frame.elem, "display") === "none" && !frame.elem.dataShow) {
                     frame.build()
                 }
-                frame.createTweens()
+                frame.createTweens(hidden)
                 frame.build()//如果是先hide再show,那么执行createTweens后再执行build则更为平滑
                 frame.insertKeyFrame()
             }
@@ -283,7 +284,7 @@ define(["avalon"], function() {
                     neo.troops = frame.troops
                 } else {
                     frame.startTime = frame.gotoEnd = false
-                    if (!effect.effects[frame.frameName]) {
+                    if (!avalon.effectHooks[frame.frameName]) {
                         frame.frameName = "fx" + Date.now()
                     }
                     if (frame.revert)  //如果设置了倒带
@@ -292,6 +293,12 @@ define(["avalon"], function() {
             }
         }
         return true
+    }
+    avalon.effectHooks = {
+        show: "1",
+        hide: "1",
+        fadeIn: "1",
+        fadeOut: "1"
     }
     /*********************************************************************
      *                                  工具函数                          *
@@ -468,8 +475,7 @@ define(["avalon"], function() {
             })
             this.build = avalon.noop //让其无效化
         },
-        createTweens: function() {
-            var hidden = avalon.isHidden(this.elem)
+        createTweens: function(hidden) {
             this.tweens = []
             for (var i in this.props) {
                 createTweenImpl(this, i, this.props[i], hidden)
@@ -477,7 +483,7 @@ define(["avalon"], function() {
         },
         deleteKeyFrame: function() {
             //删除一条@keyframes样式规则
-            if (!effect.effects[this.frameName]) {
+            if (!avalon.effectHooks[this.frameName]) {
                 deleteKeyframe(this.frameName)
             }
         },
@@ -490,8 +496,6 @@ define(["avalon"], function() {
             })
 
             //CSSKeyframesRule的模板
-            var frameRule = "@#{prefix}keyframes #{frameName}{ 0%{ #{from} } 100%{  #{to} }  }";
-
             var anmationRule = "#{frameName} #{duration}ms cubic-bezier(#{easing}) 0s 1 normal #{model} running";
             var rule1 = format(frameRule, {
                 frameName: this.frameName,
@@ -514,7 +518,7 @@ define(["avalon"], function() {
         }
     }
     var rfxnum = new RegExp("^(?:([+-])=|)(" + (/[+-]?(?:\d*\.|)\d+(?:[eE][+-]?\d+|)/).source + ")([a-z%]*)$", "i")
-    effect.effects = avalon.oneObject("show,hide,toggle,slideUp,slide,slideDown,slideUp,slideToggle,fadeIn,fadeOut, fadeToggle")
+    var frameRule = "@#{prefix}keyframes #{frameName}{ 0%{ #{from} } 100%{  #{to} }  }";
 
     function createTweenImpl(frame, name, value, hidden) {
         var elem = frame.elem
@@ -725,14 +729,14 @@ define(["avalon"], function() {
 
     avalon.each(effects, function(method, props) {
         avalon.fn[method] = function() {
-            var args = [].concat.apply([props, {frameName: method}], arguments)
+            var args = [].concat.apply([props], arguments)
             return this.animate.apply(this, args)
         }
     })
 
     String("toggle,show,hide").replace(avalon.rword, function(name) {
         avalon.fn[name] = function() {
-            var args = [].concat.apply([genFx(name, 3), {frameName: name}], arguments)
+            var args = [].concat.apply([genFx(name, 3)], arguments)
             return this.animate.apply(this, args)
         }
     })
