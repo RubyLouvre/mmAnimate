@@ -53,7 +53,7 @@ define(["avalon"], function() {
             addOption(this, arguments[i])
         }
         this.queue = !!(this.queue == null || this.queue) //是否插入子列队
-        this.easing = bezier[this.easing] ? this.easing : "linear"//缓动公式的名字
+        this.easing = bezier[this.easing] ? this.easing : "ease"//缓动公式的名字
         this.count = (this.count === Infinity || isIndex(this.count)) ? this.count : 1
         this.gotoEnd = false//是否立即跑到最后一帧
         var duration = this.duration
@@ -104,6 +104,7 @@ define(["avalon"], function() {
     var bezier = {
         "linear": [0.250, 0.250, 0.750, 0.750],
         "ease": [0.250, 0.100, 0.250, 1.000],
+        "swing": [0.250, 0.100, 0.250, 1.000],
         "easeIn": [0.420, 0.000, 1.000, 1.000],
         "easeOut": [0.000, 0.000, 0.580, 1.000],
         "easeInOut": [0.420, 0.000, 0.580, 1.000],

@@ -44,7 +44,7 @@ define(["avalon"], function() {
             addOption(this, arguments[i])
         }
         this.queue = !!(this.queue == null || this.queue) //是否插入子列队
-        this.easing = avalon.easing[this.easing] ? this.easing : "swing"//缓动公式的名字
+        this.easing = avalon.easing[this.easing] ? this.easing : "ease"//缓动公式的名字
         this.count = (this.count === Infinity || isIndex(this.count)) ? this.count : 1
         this.gotoEnd = false//是否立即跑到最后一帧
         var duration = this.duration
@@ -95,6 +95,7 @@ define(["avalon"], function() {
     var bezier = {
         "linear": [0.250, 0.250, 0.750, 0.750],
         "ease": [0.250, 0.100, 0.250, 1.000],
+        "swing": [0.250, 0.100, 0.250, 1.000],
         "easeIn": [0.420, 0.000, 1.000, 1.000],
         "easeOut": [0.000, 0.000, 0.580, 1.000],
         "easeInOut": [0.420, 0.000, 0.580, 1.000],
@@ -129,12 +130,6 @@ define(["avalon"], function() {
             Math.random().toFixed(3)]
     }
     avalon.easing = {//缓动公式
-        linear: function(pos) {
-            return pos
-        },
-        swing: function(pos) {
-            return (-Math.cos(pos * Math.PI) / 2) + 0.5
-        }
     }
     //https://github.com/rdallasgray/bez
     //http://st-on-it.blogspot.com/2011/05/calculating-cubic-bezier-function.html
@@ -142,6 +137,7 @@ define(["avalon"], function() {
     avalon.each(bezier, function(key, value) {
         avalon.easing[key] = bezierToEasing([value[0], value[1]], [value[2], value[3]])
     })
+
     function bezierToEasing(p1, p2) {
         var A = [null, null], B = [null, null], C = [null, null],
                 derivative = function(t, ax) {
