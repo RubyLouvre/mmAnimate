@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />        
+        <title>先隐藏再显示</title>
+        <script src="avalon.js"></script>
+        <script>
+            require("mmAnimate.modern", function(avalon) {
+                avalon.define("fx", function(vm) {
+                    vm.effect1 = function() {
+                        avalon(this).hide(1400, function() {
+                            avalon.log("hide")
+                        }).show(1400, function() {
+                            avalon.log("show")
+                        });
+                    }
+                    vm.effect2 = function() {
+                        avalon(document.getElementById("second")).show(1400, function() {
+                            avalon.log("show")
+                        }).hide(1400, function() {
+                            avalon.log("hide")
+                        });
+                    }
+                })
+                avalon.scan()
+            })
+        </script>
+        <style type="text/css">
+            #sample {
+                position: relative;height: 90px;
+            }
+            #sample  div { width: 60px; height: 60px; float: left; }
+            .first { background-color: #3f3; left: 0;}
+            .second { background-color: #33f; left: 80px;display: none}
+        </style>
+
+    </head>
+    <body>
+        <article>
+
+            <fieldset ><legend>先隐藏再显示</legend>
+                <pre class="brush:javascript;gutter:false;toolbar:false">
+            require("mmAnimate", function(avalon) {
+                avalon.define("fx", function(vm) {
+                    vm.effect1 = function() {
+                        avalon(this).hide(1400, function() {
+                            avalon.log("hide")
+                        }).show(1400, function() {
+                            avalon.log("show")
+                        });
+                    }
+                })
+                avalon.scan()
+            })
+                </pre>
+                <div id="sample" ms-controller="fx">
+                    <div class="first" ms-click="effect1"></div>
+                    <div class="second" id="second"></div>
+                    <p style="clear:both"><button type="button" ms-click="effect2">先显示后隐藏</button></p>
+                </div>
+
+            </fieldset>
+
+        </article>
+    </body>
+</html>

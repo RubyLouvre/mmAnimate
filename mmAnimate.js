@@ -292,6 +292,7 @@ define(["avalon"], function() {
                     neo.troops = frame.troops
                 } else {
                     frame.startTime = frame.gotoEnd = false
+                    frame.frameName = ("fx" + Math.random()).replace(/0\./, "")
                     if (frame.revert)  //如果设置了倒带
                         frame.revertTweens()
                 }
@@ -336,7 +337,7 @@ define(["avalon"], function() {
      <td>playState</td><td>Boolean</td><td>true</td><td>是否能进行动画，比如暂停了此值就为false</td>
      </tr>
      <tr>
-     <td>frameName</td><td>String</td><td>"fx"+ Date.now()</td><td>当前动画的名字</td>
+     <td>frameName</td><td>String</td><td>("fx" + Math.random()).replace(/0\./,"")</td><td>当前动画的名字</td>
      </tr>
      <tr>
      <td>count</td><td>Number</td><td>1</td><td>能重复多少次</td>
@@ -376,7 +377,7 @@ define(["avalon"], function() {
         this.orig = {}
         this.props = {}
         this.count = 1
-        this.frameName = "fx" + (new Date - 0)
+        this.frameName = ("fx" + Math.random()).replace(/0\./, "")
         this.playState = true //是否能更新
     }
     var root = document.documentElement
@@ -440,11 +441,7 @@ define(["avalon"], function() {
                     style.zoom = 1
                 }
             }
-
-            this.tweens = []
-            for (var i in this.props) {
-                createTweenImpl(this, i, this.props[i], hidden)
-            }
+            this.createTweens(hidden)
 
             if (frame.overflow) {
                 style.overflow = "hidden"
@@ -467,7 +464,12 @@ define(["avalon"], function() {
             })
             this.build = avalon.noop //让其无效化
         },
-
+        createTweens: function(hidden) {
+            this.tweens = []
+            for (var i in this.props) {
+                createTweenImpl(this, i, this.props[i], hidden)
+            }
+        },
         revertTweens: function() {
             for (var i = 0, tween; tween = this.tweens[i++]; ) {
                 var start = tween.start

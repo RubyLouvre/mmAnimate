@@ -9,6 +9,12 @@
  avalon(elem).animate( properties [, duration] [, easing] [, complete] )
  avalon(elem).animate( properties, options )
  * ```
+ * 同时支持动态keyframe与静态keyframe
+ 
+ 动态keyframe就是类似于jQuery的animate, show, hide, toggle, fadeIn, fadeOut等方法 它们只现定了最后要变成怎么样(最后一帧), 需要框架实时计算当前的样式(第一帧), 从而实现补间动画
+ 不过在mmAnimate.modern里，这个补间动画是使用css3 keyframe实现
+ 
+ 静态keyframe就是它的第一帧与最后一帧是规定好的，直接用animate.css定义好看的类名
  */
 define(["avalon"], function() {
     /*********************************************************************
@@ -279,8 +285,9 @@ define(["avalon"], function() {
                     timeline[index] = neo
                     neo.troops = frame.troops
                 } else {
+                    frame.$events.after = []
                     frame.startTime = frame.gotoEnd = false
-                    frame.frameName = "fx" + Date.now()
+                    frame.frameName = ("fx" + Math.random()).replace(/0\./,"")
                     if (frame.revert)  //如果设置了倒带
                         frame.revertTweens()
                 }
@@ -288,12 +295,7 @@ define(["avalon"], function() {
         }
         return true
     }
-    avalon.effectHooks = {
-        show: "1",
-        hide: "1",
-        fadeIn: "1",
-        fadeOut: "1"
-    }
+
     /*********************************************************************
      *                                  工具函数                          *
      **********************************************************************/
@@ -377,7 +379,7 @@ define(["avalon"], function() {
         this.orig = {}
         this.props = {}
         this.count = 1
-        this.frameName = "fx" + Date.now()
+        this.frameName = ("fx" + Math.random()).replace(/0\./,"")
         this.playState = true //是否能更新
     }
     var $playState = avalon.cssName("animation-play-state")
@@ -435,12 +437,7 @@ define(["avalon"], function() {
             if (display === "inline" && avalon.css(elem, "float") === "none") {
                 style.display = "inline-block"
             }
-            
-            this.tweens = []
-            for (var i in this.props) {
-                createTweenImpl(this, i, this.props[i], hidden)
-            }
-    
+            this.createTweens(hidden)
             if (frame.overflow) {
                 style.overflow = "hidden"
                 frame.bind("after", function() {
@@ -470,19 +467,10 @@ define(["avalon"], function() {
                     })
                 }
             })
-            this.build = avalon.noop //让其无效化
         },
-//        createTweens: function(hidden) {
-//            this.tweens = []
-//            for (var i in this.props) {
-//                createTweenImpl(this, i, this.props[i], hidden)
-//            }
-//        },
         removeKeyframe: function() {
             //删除一条@keyframes样式规则
-            if (!avalon.effectHooks[this.frameName]) {
-                deleteKeyframe(this.frameName)
-            }
+            deleteKeyframe(this.frameName)
         },
         addKeyframe: function() {
             var from = []
@@ -509,6 +497,12 @@ define(["avalon"], function() {
             })
             var elem = this.elem
             elem.style[avalon.cssName("animation")] = rule2
+        },
+        createTweens: function(hidden) {
+            this.tweens = []
+            for (var i in this.props) {
+                createTweenImpl(this, i, this.props[i], hidden)
+            }
         },
         revertTweens: function() {
 
