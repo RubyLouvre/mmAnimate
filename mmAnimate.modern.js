@@ -49,6 +49,19 @@ define(["avalon"], function() {
     }
 
     //分解用户的传参
+    var rmobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
+    var rgingerbread = /Android 2\.3\.[3-7]/i
+    var support3D = (function() {
+        var prop = avalon.cssName("transform")
+        var el = document.createElement('div')
+        var root = document.documentElement
+        el.style[prop] = 'translate3d(1px,1px,1px)';
+        root.insertBefore(el, null);
+        var val = getComputedStyle(el).getPropertyValue(prop);
+        root.removeChild(el);
+        return  null != val && val.length && 'none' != val;
+    })();
+
     function addOptions(properties) {
         //如果第二参数是对象
         for (var i = 1; i < arguments.length; i++) {
@@ -61,6 +74,9 @@ define(["avalon"], function() {
         var duration = this.duration
         this.duration = typeof duration === "number" ? duration : /^\d+ms$/.test(duration) ? parseFloat(duration) :
                 /^\d+s$/.test(duration) ? parseFloat(duration) * 1000 : 400 //动画时长
+        var ua = navigator.userAgent
+        //是否开启3D硬件加速
+        this.use3D = support3D && this.use3D && (rmobile.test(ua) ? !rgingerbread(ua) : 1)
     }
     function isIndex(s) {//判定是非负整数，可以作为索引的
         return +s === s >>> 0;
@@ -100,9 +116,7 @@ define(["avalon"], function() {
     /*********************************************************************
      *                          缓动公式                              *
      **********************************************************************/
-    avalon.mix(effect, {
-        fps: 30
-    })
+
     var bezier = {
         "linear": [0.250, 0.250, 0.750, 0.750],
         "ease": [0.250, 0.100, 0.250, 1.000],
@@ -331,7 +345,6 @@ define(["avalon"], function() {
         })
     }
 
-
     var styleElement
     function eachCSSRule(ruleName, callback, keyframes) {
         if (!styleElement) {
@@ -478,7 +491,12 @@ define(["avalon"], function() {
         addKeyframe: function() {
             var from = []
             var to = []
+            var set3D = false
+            var frame = this
             this.tweens.forEach(function(el) {
+                if (frame.use3D && /transform/i.test(el.name) && !set3D) {
+                    set3D = true
+                }
                 from.push(dasherize(el.name) + ":" + el.start + el.unit)
                 to.push(dasherize(el.name) + ":" + el.end + el.unit)
             })
@@ -500,6 +518,10 @@ define(["avalon"], function() {
             })
             var elem = this.elem
             elem.style[avalon.cssName("animation")] = rule2
+            //http://aerotwist.com/blog/on-translate3d-and-layer-creation-hacks/
+            if (this.use3D && !set3D) {
+                elem.style[avalon.cssName("transform")] = "translate3d(0,0,0)"
+            }
         },
         createTweens: function(hidden) {
             this.tweens = []
