@@ -20,11 +20,12 @@
         </style>
         <script src="avalon.js"></script>
         <script>
-            require("mmAnimate", function(avalon) {
+            require("mmAnimate.modern", function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.effect1 = function() {
                        // avalon(document.getElementById("effect1")).hide(1000).delay(2000).show(1500)
                         avalon(document.getElementById("effect1")).animate({width: 400}, 1000, function(){
+                            alert(1)
                           //  document.getElementById("avalonStyle").innerHTML = ""
                         })
                     }

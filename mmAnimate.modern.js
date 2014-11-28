@@ -199,7 +199,6 @@ define(["avalon"], function() {
      */
     var timeline = avalon.timeline = []
     function insertFrame(frame) { //插入关键帧
-
         if (frame.queue) { //如果插入到已有的某一帧的子列队
             var gotoQueue = 1
             for (var i = timeline.length, el; el = timeline[--i]; ) {
@@ -249,13 +248,10 @@ define(["avalon"], function() {
         if (!frame.startTime) { //第一帧
             if (frame.playState) {
                 frame.fire("before")//动画开始前做些预操作
-                var hidden = avalon.isHidden(frame.elem)
-                if (avalon.css(frame.elem, "display") === "none" && !frame.elem.dataShow) {
-                    frame.build()
-                }
-                frame.createTweens(hidden)
-                frame.build()//如果是先hide再show,那么执行createTweens后再执行build则更为平滑
-                frame.insertKeyFrame()
+                //此方法是用于获取元素最初的显隐状态,让元素处于可动画状态(display不能为none)
+                //处理overflow,绑定after回调
+                frame.build()
+                frame.addKeyframe()
             }
             frame.startTime = now
         } else { //中间自动生成的补间
@@ -274,7 +270,7 @@ define(["avalon"], function() {
                 frame.count--
                 frame.fire("after") //动画结束后执行的一些收尾工作
                 if (frame.count <= 0) {
-                    frame.deleteKeyFrame()
+                    frame.removeKeyframe()
                     frame.fire("complete") //执行用户回调
                     var neo = frame.troops.shift()
                     if (!neo) {
@@ -284,9 +280,7 @@ define(["avalon"], function() {
                     neo.troops = frame.troops
                 } else {
                     frame.startTime = frame.gotoEnd = false
-                    if (!avalon.effectHooks[frame.frameName]) {
-                        frame.frameName = "fx" + Date.now()
-                    }
+                    frame.frameName = "fx" + Date.now()
                     if (frame.revert)  //如果设置了倒带
                         frame.revertTweens()
                 }
@@ -332,8 +326,6 @@ define(["avalon"], function() {
             return ""
         })
     }
-
-
 
 
     var styleElement
@@ -416,7 +408,7 @@ define(["avalon"], function() {
             //show 开始时计算其width1 height1 保存原来的width height display改为inline-block或block overflow处理 赋值（width1，height1）
             //hide 保存原来的width height 赋值为(0,0) overflow处理 结束时display改为none;
             //toggle 开始时判定其是否隐藏，使用再决定使用何种策略
-            //如果是动画则必须将它显示出来
+            var hidden = avalon.isHidden(elem)
             if ("height" in props || "width" in props) {
                 frame.overflow = [style.overflow, style.overflowX, style.overflowY]
             }
@@ -443,7 +435,12 @@ define(["avalon"], function() {
             if (display === "inline" && avalon.css(elem, "float") === "none") {
                 style.display = "inline-block"
             }
-
+            
+            this.tweens = []
+            for (var i in this.props) {
+                createTweenImpl(this, i, this.props[i], hidden)
+            }
+    
             if (frame.overflow) {
                 style.overflow = "hidden"
                 frame.bind("after", function() {
@@ -475,19 +472,19 @@ define(["avalon"], function() {
             })
             this.build = avalon.noop //让其无效化
         },
-        createTweens: function(hidden) {
-            this.tweens = []
-            for (var i in this.props) {
-                createTweenImpl(this, i, this.props[i], hidden)
-            }
-        },
-        deleteKeyFrame: function() {
+//        createTweens: function(hidden) {
+//            this.tweens = []
+//            for (var i in this.props) {
+//                createTweenImpl(this, i, this.props[i], hidden)
+//            }
+//        },
+        removeKeyframe: function() {
             //删除一条@keyframes样式规则
             if (!avalon.effectHooks[this.frameName]) {
                 deleteKeyframe(this.frameName)
             }
         },
-        insertKeyFrame: function() {
+        addKeyframe: function() {
             var from = []
             var to = []
             this.tweens.forEach(function(el) {

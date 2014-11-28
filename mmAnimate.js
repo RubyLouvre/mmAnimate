@@ -265,12 +265,9 @@ define(["avalon"], function() {
         if (!frame.startTime) { //第一帧
             if (frame.playState) {
                 frame.fire("before")//动画开始前做些预操作
-                var hidden = avalon.isHidden(this.elem)
-                if (avalon.css(frame.elem, "display") === "none" && !frame.elem.dataShow) {
-                    frame.build()
-                }
-                frame.createTweens(hidden)
-                frame.build()//如果是先hide再show,那么执行createTweens后再执行build则更为平滑
+                //此方法是用于获取元素最初的显隐状态,让元素处于可动画状态(display不能为none)
+                //处理overflow,绑定after回调
+                frame.build()
             }
             frame.startTime = now
         } else { //中间自动生成的补间
@@ -412,6 +409,7 @@ define(["avalon"], function() {
             //hide 保存原来的width height 赋值为(0,0) overflow处理 结束时display改为none;
             //toggle 开始时判定其是否隐藏，使用再决定使用何种策略
             //如果是动画则必须将它显示出来
+            var hidden = avalon.isHidden(elem)
             if ("height" in props || "width" in props) {
                 frame.overflow = [style.overflow, style.overflowX, style.overflowY]
             }
@@ -443,6 +441,11 @@ define(["avalon"], function() {
                 }
             }
 
+            this.tweens = []
+            for (var i in this.props) {
+                createTweenImpl(this, i, this.props[i], hidden)
+            }
+
             if (frame.overflow) {
                 style.overflow = "hidden"
                 frame.bind("after", function() {
@@ -464,12 +467,7 @@ define(["avalon"], function() {
             })
             this.build = avalon.noop //让其无效化
         },
-        createTweens: function(hidden) {
-            this.tweens = []
-            for (var i in this.props) {
-                createTweenImpl(this, i, this.props[i], hidden)
-            }
-        },
+
         revertTweens: function() {
             for (var i = 0, tween; tween = this.tweens[i++]; ) {
                 var start = tween.start
