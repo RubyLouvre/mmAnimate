@@ -293,8 +293,12 @@ define(["avalon"], function() {
                 } else {
                     frame.startTime = frame.gotoEnd = false
                     frame.frameName = ("fx" + Math.random()).replace(/0\./, "")
-                    if (frame.revert)  //如果设置了倒带
+                    if (frame.revert) {
                         frame.revertTweens()
+                    } else {
+                        frame.createTweens(avalon.isHidden(frame.elem))
+                    }  //如果设置了倒带
+
                 }
             }
         }

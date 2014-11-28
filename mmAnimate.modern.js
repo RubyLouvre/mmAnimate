@@ -285,11 +285,13 @@ define(["avalon"], function() {
                     timeline[index] = neo
                     neo.troops = frame.troops
                 } else {
-                    frame.$events.after = []
                     frame.startTime = frame.gotoEnd = false
-                    frame.frameName = ("fx" + Math.random()).replace(/0\./,"")
-                    if (frame.revert)  //如果设置了倒带
+                    frame.frameName = ("fx" + Math.random()).replace(/0\./, "")
+                    if (frame.revert) {  //如果设置了倒带
                         frame.revertTweens()
+                    } else {
+                        frame.createTweens(avalon.isHidden(frame.elem))
+                    }
                 }
             }
         }
@@ -379,7 +381,7 @@ define(["avalon"], function() {
         this.orig = {}
         this.props = {}
         this.count = 1
-        this.frameName = ("fx" + Math.random()).replace(/0\./,"")
+        this.frameName = ("fx" + Math.random()).replace(/0\./, "")
         this.playState = true //是否能更新
     }
     var $playState = avalon.cssName("animation-play-state")
@@ -467,6 +469,7 @@ define(["avalon"], function() {
                     })
                 }
             })
+            this.build = avalon.noop
         },
         removeKeyframe: function() {
             //删除一条@keyframes样式规则
@@ -505,7 +508,13 @@ define(["avalon"], function() {
             }
         },
         revertTweens: function() {
-
+            for (var i = 0, tween; tween = this.tweens[i++]; ) {
+                var start = tween.start
+                var end = tween.end
+                tween.start = end
+                tween.end = start
+                this.props[tween.name] = (tween.unit ? tween.start + tween.unit : tween.start)
+            }
         }
     }
     var rfxnum = new RegExp("^(?:([+-])=|)(" + (/[+-]?(?:\d*\.|)\d+(?:[eE][+-]?\d+|)/).source + ")([a-z%]*)$", "i")
