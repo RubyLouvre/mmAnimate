@@ -1,0 +1,22 @@
+{
+  "name": "mmAnimate",
+  "main": "mmAnimate.js",
+  "version": "1.0.0",
+  "homepage": "https://github.com/RubyLouvre/mmAnimate",
+  "authors": [
+    "RubyLouvre"
+  ],
+  "description": "An Avalon based animate library",
+  "keywords": [
+    "animate",
+    "avalon"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
