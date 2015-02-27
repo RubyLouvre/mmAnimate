@@ -642,7 +642,7 @@ define(["avalon"], function() {
         }
     }
     ;
-    ["scrollTop", "scollLeft"].forEach(function(name) {
+    ["scrollTop", "scrollLeft"].forEach(function(name) {
         Tween.propHooks[name] = {
             get: function(tween) {
                 return tween.elem[tween.name]
