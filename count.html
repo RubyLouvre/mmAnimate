@@ -5,7 +5,7 @@
         <title>count</title>
         <script src="avalon.js"></script>
         <script>
-            require("mmAnimate", function(avalon) {
+            require(["mmAnimate"], function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.effect = function() {
                         avalon(this).animate({top: 400}, {count: 10, duration: 1000})
@@ -47,7 +47,7 @@
             <p>avalon实例</p>
             <fieldset ><legend>例子</legend>
                 <pre class="brush:javascript;gutter:false;toolbar:false">
-            require("mmAnimate", function(avalon) {
+            require(["mmAnimate"], function(avalon) {
                 avalon.define("fx", function(vm) {
                   
                     vm.effect = function() {
@@ -65,7 +65,7 @@
             </fieldset>
             <fieldset ><legend>例子</legend>
                 <pre class="brush:javascript;gutter:false;toolbar:false">
-            require("mmAnimate", function(avalon) {
+            require(["mmAnimate"], function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.effect2 = function() {
                        avalon(this).animate({top: 400},{count: 10, duration: 1000, revert: true})

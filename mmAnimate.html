@@ -6,7 +6,7 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <script src="avalon.mobile.js"></script>
         <script>
-            require("mmAnimate,ready!", function() {
+            require(["mmAnimate","ready!"], function() {
                 var el = document.getElementById("test")
                 el.onclick = function() {
                     switch (el.innerHTML) {

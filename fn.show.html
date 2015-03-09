@@ -5,7 +5,7 @@
         <title>avalon.fn.show</title>
         <script src="avalon.js"></script>
         <script>
-            require("mmAnimate", function(avalon) {
+            require(["mmAnimate"], function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.array = ["a", "b", "c", "d", "e"]
                     vm.effect = function() {
@@ -53,7 +53,7 @@
             </p>
             <fieldset ><legend>例子</legend>
                 <pre class="brush:javascript;gutter:false;toolbar:false">
-            require("mmAnimate", function(avalon) {
+            require(["mmAnimate"], function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.array = ["a", "b", "c", "d", "e"]
                     vm.effect = function() {

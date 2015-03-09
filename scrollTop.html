@@ -5,7 +5,7 @@
         <title>滚动条动画</title>
         <script src="avalon.js"></script>
         <script>
-            require("mmAnimate.modern", function(avalon) {
+            require(["mmAnimate.modern"], function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.array = avalon.range(0, 1000)
                     vm.effect = function() {
@@ -32,7 +32,7 @@
             <div  ms-repeat="array" >{{el}}</div>
         </div>
         <pre>
-            require("mmAnimate", function(avalon) {
+            require(["mmAnimate"], function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.array = avalon.range(0, 1000)
                     vm.effect = function() {

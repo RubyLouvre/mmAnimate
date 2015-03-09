@@ -81,7 +81,7 @@
 
             <div id="test" class="animate" ms-controller="fx" ms-click="effect" ></div>
             <pre class="brush:js;gutter:false;toolbar:false">
-          require("mmAnimate", function(avalon) {
+          require(["mmAnimate"], function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.effect = function() {
                         avalon(this).animate({
@@ -98,7 +98,7 @@
             </pre>
             <p>上面代码相当于</p>
             <pre class="brush:js;gutter:false;toolbar:false">
-         require("mmAnimate", function(avalon) {
+         require(["mmAnimate"], function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.effect = function() {
                        avalon(this).animate({

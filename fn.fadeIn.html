@@ -17,7 +17,7 @@
         </style>
         <script src="avalon.js"></script>
         <script>
-            require("mmAnimate", function(avalon) {
+            require(["mmAnimate"], function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.effect = function() {
                         for (var i = 0, el; el = this.children[i++]; ) {
@@ -50,7 +50,7 @@
             </p>
             <fieldset ><legend>例子</legend>
                 <pre class="brush:javascript;gutter:false;toolbar:false">
-            require("mmAnimate", function(avalon) {
+            require(["mmAnimate"], function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.effect = function() {
                         for (var i = 0, el; el = this.children[i++]; ) {

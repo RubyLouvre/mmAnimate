@@ -13,7 +13,7 @@
         </style>
         <script src="avalon.js"></script>
         <script>
-            require("ready!,mmAnimate", function(avalon) {
+            require(["ready!","mmAnimate"], function(avalon) {
                 var box = avalon(document.getElementById("test"));
                 avalon.define("fx", function(vm) {
                     vm.start = function() {
@@ -79,7 +79,7 @@
                     <li>true,true:停止了宽与高的动画，并把它们的值设到最终值。</li>
                 </ul>
                 <pre class="brush:javascript;gutter:false;toolbar:false">
-            require("mmAnimate", function(avalon) {
+            require(["mmAnimate"], function(avalon) {
                 var box = avalon(document.getElementById("test"));
                 avalon.define("fx", function(vm) {
                     vm.start = function() {

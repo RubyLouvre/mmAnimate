@@ -5,7 +5,7 @@
         <title>先隐藏再显示</title>
         <script src="avalon.js"></script>
         <script>
-            require("mmAnimate.modern", function(avalon) {
+            require(["mmAnimate.modern"], function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.effect1 = function() {
                         avalon(this).hide(1400, function() {
@@ -40,7 +40,7 @@
 
             <fieldset ><legend>先隐藏再显示</legend>
                 <pre class="brush:javascript;gutter:false;toolbar:false">
-            require("mmAnimate", function(avalon) {
+            require(["mmAnimate"], function(avalon) {
                 avalon.define("fx", function(vm) {
                     vm.effect1 = function() {
                         avalon(this).hide(1400, function() {
