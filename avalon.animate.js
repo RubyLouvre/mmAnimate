@@ -31,7 +31,7 @@ define(["mmAnimate"], function(avalon) {
             fnObj = vmOptions
         }
         var element = data.element
-        var options = avalon.mix({}, vmOptions || {}, data[opts] || {}, avalon.getWidgetData(element, "animate"));
+        var options = avalon.mix({}, vmOptions || {}, data[opts] || {}, avalon.getWidgetData(element, "animate"))
 
         "step,complete".replace(avalon.rword, function(name) {
             var method = options[name]

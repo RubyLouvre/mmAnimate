@@ -1,0 +1,28 @@
+{
+  "name": "mmAnimate",
+  "version": "1.0.0",
+  "description": "A simple but powerful tweening / animation library for Javascript. Part of the avalon suite of libraries.",
+  "main": "dist/mmAnimate.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RubyLouvre/avalon-resource.git"
+  },
+  "dependencies": {
+    "avalon2": "~2.1.0"
+  },
+  "keywords": [
+    "ajax"
+  ],
+  "author": "RubyLouvre",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/RubyLouvre/avalon-resource/issues"
+  },
+  "homepage": "https://github.com/RubyLouvre/avalon-resource#readme",
+  "devDependencies": {
+    "webpack": "^1.13.1"
+  }
+}
