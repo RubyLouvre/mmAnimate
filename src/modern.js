@@ -6,6 +6,7 @@ if (!(window.MozCSSKeyframeRule || window.WebKitCSSKeyframeRule || window.CSSKey
 var canUse3D = require('./canUse3D')
 var insertFrame = require('./insertFrame')
 var Frame = require('./frame')
+require('./easing')
 require('./parseColor/compact')
 require('./keyframe')
 require('./methods')

@@ -4,7 +4,7 @@ var canUse3D = require('./canUse3D')
 var insertFrame = require('./insertFrame')
 var Frame = require('./frame')
 require('./parseColor/compact')
-require('./updateColor')
+require('./easing')
 require('./methods')
 
 avalon.fn.animate = function (properties, options) {
