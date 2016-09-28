@@ -1,5 +1,5 @@
 /*!
- * built in 2016-9-24:14 version 1.0 by 司徒正美
+ * built in 2016-9-28:8 version 1.0 by 司徒正美
  * 2011.8.31
  *      将会传送器的abort方法上传到avalon.XHR.abort去处理
  *      修复serializeArray的bug
@@ -174,7 +174,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var root = document.documentElement
 	    el.style[prop] = 'translate3d(1px,1px,1px)'
 	    root.insertBefore(el, null)
-	    if (window.getComputedStyle) {
+	    if (!window.getComputedStyle) {
 	        return false
 	    }
 	    var val = getComputedStyle(el).getPropertyValue(prop)
@@ -189,6 +189,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	}
 	module.exports = canUse3D
+
 
 /***/ },
 /* 2 */
