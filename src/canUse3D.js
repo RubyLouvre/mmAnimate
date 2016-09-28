@@ -7,7 +7,7 @@ var support3D = (function () {
     var root = document.documentElement
     el.style[prop] = 'translate3d(1px,1px,1px)'
     root.insertBefore(el, null)
-    if (window.getComputedStyle) {
+    if (!window.getComputedStyle) {
         return false
     }
     var val = getComputedStyle(el).getPropertyValue(prop)
